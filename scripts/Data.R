@@ -4,7 +4,7 @@
 #                                  Laura Manuela Rodríguez Morales                     #
 #                                  Nicol Valeria Rodríguez Rodríguez                   #
 #                                  Brayan Alexander Vargas Rojas                       #
-#                          Fuente: Tweets                                              #
+#                          Fuente: Tweeter                                             #
 #**************************************************************************************#
 
 # Limpiar el espacio
@@ -55,21 +55,65 @@ test <- read_csv("./data/test.csv", col_types = cols(
   text = col_character()
 ))
 
-# Preprocesamiento
+# 2.1 Preprocesamiento --------------------------------------------------------
+# 2.1.1                                 Train
 tweets_train <- train$text
 
 tweets_train <- removeNumbers(tweets_train)
 tweets_train <- removePunctuation(tweets_train)
 tweets_train <- tolower(tweets_train)
 tweets_train <- stripWhitespace(tweets_train)
+tweets_train <- iconv(tweets_train, from = "UTF-8", to = "ASCII//TRANSLIT")
+
 
 tweets_train_tidy <- as.data.frame(tweets_train) %>% unnest_tokens( "word", tweets_train)
 
 dim(tweets_train_tidy)
+head(tweets_train_tidy, n = 30)
 
-tweets_train_tidy  %>% 
+tweets_train_tidy2 <- tweets_train_tidy  %>% 
+  as.data.frame() %>%
+  rename(tweets = 1) %>%
+  unnest_tokens(output = "word", input = "tweets")
+
+dim(tweets_train_tidy2)
+head(tweets_train_tidy3, n = 30)
+
+tweets_train_tidy2 %>% 
   count(word, sort = TRUE)   %>% 
   head()
+
+tweets_train_tidy3 <- tweets_train_tidy2  %>% 
+  anti_join(tibble(word =stopwords("spanish")))
+
+# 2.1.2                                 Test
+tweets_test <- test$text
+
+tweets_test <- removeNumbers(tweets_test)
+tweets_test <- removePunctuation(tweets_test)
+tweets_test <- tolower(tweets_test)
+tweets_test <- stripWhitespace(tweets_test)
+tweets_test <- iconv(tweets_test, from = "UTF-8", to = "ASCII//TRANSLIT")
+
+tweets_test_tidy <- as.data.frame(tweets_test) %>% unnest_tokens( "word", tweets_test)
+
+dim(tweets_test_tidy)
+head(tweets_test, n = 30)
+
+tweets_test_tidy2 <- tweets_test_tidy  %>% 
+  as.data.frame() %>%
+  rename(tweets = 1) %>%
+  unnest_tokens(output = "word", input = "tweets")
+
+dim(tweets_test_tidy2)
+head(tweets_test_tidy2, n = 30)
+
+tweets_test_tidy2 %>% 
+  count(word, sort = TRUE)   %>% 
+  head()
+
+tweets_test_tidy3 <- tweets_test_tidy2  %>% 
+  anti_join(tibble(word =stopwords("spanish")))
 
 
 
