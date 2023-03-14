@@ -39,3 +39,37 @@ sapply(list.of.packages, require, character.only = TRUE)
 # 2. Data
 # ------------------------------------------------------------------------------------ #
 
+# Template submission: cuenta de tweeter 
+cuenta <- read.csv("./data/sample_submission.csv")
+
+# Train
+train <- read_csv("./data/train.csv", col_types = cols(
+  id = col_character(),
+  name = col_character(),
+  text = col_character()
+))
+
+# Test 
+test <- read_csv("./data/test.csv", col_types = cols(
+  id = col_character(),
+  text = col_character()
+))
+
+# Preprocesamiento
+tweets_train <- train$text
+
+tweets_train <- removeNumbers(tweets_train)
+tweets_train <- removePunctuation(tweets_train)
+tweets_train <- tolower(tweets_train)
+tweets_train <- stripWhitespace(tweets_train)
+
+tweets_train_tidy <- as.data.frame(tweets_train) %>% unnest_tokens( "word", tweets_train)
+
+dim(tweets_train_tidy)
+
+tweets_train_tidy  %>% 
+  count(word, sort = TRUE)   %>% 
+  head()
+
+
+
