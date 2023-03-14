@@ -20,9 +20,8 @@ setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
-                     "ggplot2", "plotly", "corrplot", "Hmisc", "sf", "tmaptools", 
-                     "osmdata", "leaflet", "rgeos")
-
+                     "ggplot2", "plotly", "corrplot", "Hmisc", "tm", "tidytext", 
+                     "wordcloud", "SentimentAnalysis")
 
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -39,3 +38,4 @@ sapply(list.of.packages, require, character.only = TRUE)
 # ------------------------------------------------------------------------------------ #
 # 2. Data
 # ------------------------------------------------------------------------------------ #
+
