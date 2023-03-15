@@ -58,75 +58,10 @@ test <- read_csv("./data/test.csv", col_types = cols(
 # 2.1 Preprocesamiento --------------------------------------------------------
 
 # 2.1.1 ----------------------------  Train -----------------------------------
-tweets_train <- train$text # Importamos los datos de training
-
-tweets_train <- removeNumbers(tweets_train) # Quitamos números
-tweets_train <- tolower(tweets_train) # Hacemos que todo esté en minúscula 
-tweets_train <- stripWhitespace(tweets_train) # Quitamos los múltiples espacios
-tweets_train <- iconv(tweets_train, from = "UTF-8", to = "ASCII//TRANSLIT") # Convertimos a ASCII para un mejor análsis con R
-
-# Tokenizamos
-tweets_train_tidy <- as.data.frame(tweets_train) %>% unnest_tokens( "word", tweets_train)
-
-# Removemos toda puntuación excepto @, letras con tílde y diéresis y comienzos de signo de pregunta y exclamación.
-#También quitamos stopwords y rt que suele ser irrelevante
-head(stopwords("spanish"))
-
-tweets_train_tidy2 <- tweets_train_tidy %>% 
-  mutate(word = gsub("[^[:alnum:]#@áéíóúüÁÉÍÓÚÜ¿¡]+", " ", word)) %>%
-  filter(!word %in% c(stopwords("spanish"), "rt")) 
-
-dim(tweets_train_tidy)
-head(tweets_train_tidy, n = 30)
-
-#Veamos cuáles son las palabras más frecuentes
-tweets_train_tidy2 %>% 
-  dplyr::count(word, sort = TRUE)   %>% 
-  head()
-
-dim(tweets_train_tidy2) # se reducen casi a la mitad la cantidad de palabras
-head(tweets_train_tidy2, n = 30
-
-
-# 2.1.2 -----------------------------  Test ------------------------------------
-
-comment({
-
-tweets_test <- test$text # Importamos los datos de testing
-
-tweets_test <- removeNumbers(tweets_test) # Quitamos números
-tweets_test <- tolower(tweets_test) # Hacemos que todo esté en minúscula 
-tweets_test <- stripWhitespace(tweets_test) # Quitamos los múltiples espacios
-tweets_test <- iconv(tweets_test, from = "UTF-8", to = "ASCII//TRANSLIT") # Convertimos a ASCII para un mejor análsis con R
-
-# Tokenizamos
-tweets_test_tidy <- as.data.frame(tweets_test) %>% unnest_tokens( "word", tweets_test)
-
-# Removemos toda puntuación excepto @, letras con tílde y diéresis y comienzos de signo de pregunta y exclamación.
-#También quitamos stopwords y rt que suele ser irrelevante
-head(stopwords("spanish"))
-
-tweets_test_tidy2 <- tweets_test_tidy %>% 
-  mutate(word = gsub("[^[:alnum:]#@áéíóúüÁÉÍÓÚÜ¿¡]+", " ", word)) %>%
-  filter(!word %in% c(stopwords("spanish"), "rt")) 
-
-dim(tweets_test_tidy)
-head(tweets_test_tidy, n = 30)
-
-#Veamos cuáles son las palabras más frecuentes
-tweets_test_tidy2 %>% 
-  dplyr::count(word, sort = TRUE)   %>% 
-  head()})
-
-comment({dim(tweets_test_tidy2) # se reducen casi a la mitad la cantidad de palabras
-head(tweets_test_tidy2, n = 30
-})
-
-
-# 2.1.1 ----------------------------  Train -----------------------------------
 
 tweets_train <- train$text
 
+#Removemos números, puntuación y espacios en blanco excesivos. Ponemos todo en minúsculas y formato ASCII para mejor manejo.
 tweets_train <- removeNumbers(tweets_train)
 tweets_train <- removePunctuation(tweets_train)
 tweets_train <- tolower(tweets_train)
@@ -159,9 +94,42 @@ wordcloud(tweets_train_tidy2$word, min.freq = 100,
 
 class(tweets_train_tidy2$word)
 
+# Sacamos la raíz de las palabras
+
+tweets_train_tidy2$radical <- stemDocument(tweets_train_tidy2$word, language="spanish")
+tweets_train_tidy2 %>% head(n=30)
+
+# Generar bigramas a partir del texto de las críticas
+bigrams <- as.data.frame(tweets_train) %>%
+  unnest_tokens(bigram, tweets_train, token = "ngrams", n = 2)
+
+
+stop_words <- data.frame(word1 = stopwords("es"), 
+                         word2 = stopwords("es"))
+
+
+# Eliminar los bigramas que contengan palabras de parada
+bigrams <- bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  anti_join(stop_words, by = "word1") %>%
+  anti_join(stop_words, by = "word2") %>%
+  unite(bigram, word1, word2, sep = " ")
+
+bigram_freq <- bigrams %>%
+  count(bigram)
+
+# Visualizar los bigramas más frecuentes
+ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
+  geom_bar(stat = "identity", fill = "#4e79a7") +
+  ggtitle("Bigramas más frecuentes") +
+  ylab("Bigramas") +
+  xlab("Frecuencia")
+
 # 2.1.2 -------------------------  Test  ---------------------------------------
+
 tweets_test <- test$text
 
+#Removemos números, puntuación y espacios en blanco excesivos. Ponemos todo en minúsculas y formato ASCII para mejor manejo.
 tweets_test <- removeNumbers(tweets_test)
 tweets_test <- removePunctuation(tweets_test)
 tweets_test <- tolower(tweets_test)
@@ -189,8 +157,39 @@ dim(tweets_test_tidy2) # se reducen casi a la mitad la cantidad de palabras
 head(tweets_test_tidy2, n = 30) 
 
 # vemos cuáles son las palabras más comunes
-wordcloud(tweets_train_tidy2$word, min.freq = 100, 
+wordcloud(tweets_test_tidy2$word, min.freq = 100, 
           colors= c(rgb(72/255, 191/255, 169/255),rgb(249/255, 220/255, 92/255), rgb(229/255, 249/255, 147/255))) 
 
 class(tweets_test_tidy2$word)
 
+
+# Sacamos la raíz de las palabras
+
+tweets_test_tidy2$radical <- stemDocument(tweets_test_tidy2$word, language="spanish")
+tweets_test_tidy2 %>% head(n=30)
+
+# Generar bigramas a partir del texto de las críticas
+bigrams <- as.data.frame(tweets_test) %>%
+  unnest_tokens(bigram, tweets_test, token = "ngrams", n = 2)
+
+
+stop_words <- data.frame(word1 = stopwords("es"), 
+                         word2 = stopwords("es"))
+
+
+# Eliminar los bigramas que contengan palabras de parada
+bigrams <- bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  anti_join(stop_words, by = "word1") %>%
+  anti_join(stop_words, by = "word2") %>%
+  unite(bigram, word1, word2, sep = " ")
+
+bigram_freq <- bigrams %>%
+  count(bigram)
+
+# Visualizar los bigramas más frecuentes
+ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
+  geom_bar(stat = "identity", fill = "#4e79a7") +
+  ggtitle("Bigramas más frecuentes") +
+  ylab("Bigramas") +
+  xlab("Frecuencia")
