@@ -1,10 +1,10 @@
 #**************************************************************************************#
-#                                    TALLER 3 BDML                                     #
+#                                    TALLER 4 BDML                                     #
 #                        Uniandes: Sofia Charry Tobar                                  #
 #                                  Laura Manuela Rodríguez Morales                     #
 #                                  Nicol Valeria Rodríguez Rodríguez                   #
 #                                  Brayan Alexander Vargas Rojas                       #
-#                          Fuente: Tweeter                                             #
+#                          Fuente: Twitter                                             #
 #**************************************************************************************#
 
 # Limpiar el espacio
@@ -193,3 +193,4 @@ ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
   ggtitle("Bigramas más frecuentes") +
   ylab("Bigramas") +
   xlab("Frecuencia")
+
