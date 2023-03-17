@@ -100,8 +100,33 @@ write.csv(Kaggle_Modelolasso,"./stores/Kaggle_ModeloLS.csv", row.names = FALSE)
 
 # Accuracy: 
 
-### 3.3 Elastic net -----------------------------------------------------------------------------------
-ModeloEN<-caret::train(fmla,
+### 3.3 Ridge -------------------------------------------------------------------------------------------
+grid=10^seq(50,-50,length=1000)
+
+ModeloRidge<- train(name~.,
+                    data = training,
+                    method = 'glmnet', 
+                    tuneGrid = expand.grid(alpha = 0, lambda = grid), 
+                    preProcess = c("center", "scale"),
+                    metric = "Accuracy"
+                    
+)
+
+## Predicción 1: Predicciones con testing
+pred_test1_ModeloRidge <- predict(ModeloRidge, newdata = testing, type="raw")
+eva_ModeloRidge <- data.frame(obs=testing$price, pred=pred_test1_ModeloRidge) # Data frame con observados y predicciones
+metrics_ModeloRidge <- metrics(eva_ModeloRidge, obs, pred); metrics_ModeloRidge # Cálculo del medidas de precisión
+
+## Predicción 2: Predicciones con test_bog
+pred_test2_ModeloRidge <- predict(ModeloRidge, newdata = test_bog)
+
+# Exportar para prueba en Kaggle
+Kaggle_ModeloRidge <- data.frame(property_id=test_bog$property_id, price=pred_test2_ModeloRidge)
+write.csv(Kaggle_ModeloRidge,"./stores/Kaggle_ModeloRidge.csv", row.names = FALSE)
+# Accuracy: 
+
+### 3.4 Elastic net -----------------------------------------------------------------------------------
+ModeloEN<-caret::train(name~.,
                        data=training,
                        method = 'glmnet', 
                        trControl = ctrl,
@@ -127,7 +152,7 @@ Kaggle_ModeloEN <- data.frame(property_id=test_bog$property_id, price=pred_test2
 write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
 # Accuracy: 
 
-### 3.4 GBM -------------------------------------------------------------------------------------------
+### 3.5 GBM -------------------------------------------------------------------------------------------
 p_load(gbm)
 grid_gbm<-expand.grid(n.trees=c(300,700,1000),interaction.depth=c(1:4),shrinkage=seq(0.001,0.1,by = 0.001),n.minobsinnode
                       =seq(10,40,by = 10))
@@ -157,29 +182,6 @@ pred_test2_ModeloGBM <- predict(ModeloGBM, newdata = test_ori)
 # Exportar para prueba en Kaggle
 Kaggle_ModeloGBM <- data.frame(id=test_ori$id, name=pred_test2_ModeloGBM)
 write.csv(Kaggle_ModeloGBM,"./stores/Kaggle_ModeloGBM.csv", row.names = FALSE)
-# Accuracy: 
-
-### 3.5 Ridge -------------------------------------------------------------------------------------------
-grid=10^seq(50,-50,length=1000)
-
-ModeloRidge<- train(fmla,
-                    data = training,
-                    method = 'glmnet', 
-                    tuneGrid = expand.grid(alpha = 0, lambda = grid), 
-                    preProcess = c("center", "scale")
-)
-
-## Predicción 1: Predicciones con testing
-pred_test1_ModeloRidge <- predict(ModeloRidge, newdata = testing, type="raw")
-eva_ModeloRidge <- data.frame(obs=testing$price, pred=pred_test1_ModeloRidge) # Data frame con observados y predicciones
-metrics_ModeloRidge <- metrics(eva_ModeloRidge, obs, pred); metrics_ModeloRidge # Cálculo del medidas de precisión
-
-## Predicción 2: Predicciones con test_bog
-pred_test2_ModeloRidge <- predict(ModeloRidge, newdata = test_bog)
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloRidge <- data.frame(property_id=test_bog$property_id, price=pred_test2_ModeloRidge)
-write.csv(Kaggle_ModeloRidge,"./stores/Kaggle_ModeloRidge.csv", row.names = FALSE)
 # Accuracy: 
 
 ### 3.5 Superlearner -------------------------------------------------------------------------------------------
