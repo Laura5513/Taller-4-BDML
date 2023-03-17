@@ -14,13 +14,12 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
-#setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
-#setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
+setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 
-list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
-                     "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
-                     "ggplot2", "plotly", "corrplot", "Hmisc", "tm", "tidytext", 
+list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "tidyr",
+                     "caret", "glmnet", "MLmetrics", "skimr", "stargazer", 
+                     "ggplot2", "plotly",  "Hmisc", "tm", "tidytext", 
                      "wordcloud", "SentimentAnalysis", "stopwords", "stringi", "text2vec")
 
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -61,14 +60,9 @@ test <- read_csv("./data/test.csv", col_types = cols(
 
 tweets_train <- train
 
-p_load("stringi")
-p_load(tm)
 p_load(SnowballC)
-p_load(dplyr)
-p_load(tidyr)
 p_load(Matrix)
 p_load(NLP)
-p_load(text2vec)
 
 # Eliminamos tildes y caracteres especiales del español
 tweets_train <- stri_trans_general(str = train$text, id = "Latin-ASCII")
@@ -82,6 +76,8 @@ tweets_train <- gsub("@\\w+", "", tweets_train)
 tweets_train <- gsub("\\s+", " ", tweets_train)
 # Recortar los espacios en blanco iniciales y finales
 tweets_train <- gsub("^\\s+|\\s+$", "", tweets_train)
+# Remover emojis
+tweets_train <- gsub("[^\x01-\x7F]", "", tweets_train)
 # Quitamos stop words
 p_load(stopwords)
 # Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
@@ -91,16 +87,15 @@ lista_palabras <- union(lista_palabras1, lista_palabras2)
 
 tweets_train <- removeWords(tweets_train, lista_palabras)
 
-# Todo minúscula
-tweets_train <- tm_map(tweets_train,content_transformer(tolower)) 
-#Quitamos números
-#tweets_train <- tm_map(tweets_train,content_transformer(removeNumbers))
-# Quitamos puntuación
-tweets_train <- tm_map(tweets_train,content_transformer(removePunctuation))
-# Quitamos números
-#tweets_train <- tm_map(tweets_train,content_transformer(removeNumbers))
-# Quitamos espacios en blanco en medio
-tweets_train <- tm_map(tweets_train,content_transformer(stripWhitespace))
+# tweets_train <- Corpus(VectorSource(tweets_train))
+# # Todo minúscula
+# tweets_train <- tm_map(tweets_train,content_transformer(tolower)) 
+# #Quitamos números
+# tweets_train <- tm_map(tweets_train,content_transformer(removeNumbers))
+# # Quitamos puntuación
+# tweets_train <- tm_map(tweets_train,content_transformer(removePunctuation))
+# # Quitamos espacios en blanco en medio
+# tweets_train <- tm_map(tweets_train,content_transformer(stripWhitespace))
 
 # Stemmizamos 
 tweets_train <- wordStem(tweets_train, language = "spanish")
@@ -110,25 +105,21 @@ corpus_train <- Corpus(VectorSource(tweets_train))
 dtm_idf_train<-DocumentTermMatrix(tweets_train,control=list(weighting=weightTfIdf))
 inspect(dtm_idf_train[100:103,])
 
-dim(tweets_train)
-
 # Eliminamos términos que son poco frecuentes en todo el corpus
-dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.95)
+dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.99)
 inspect(dtm_idf_train[100:103,])
 
+# Base de datos final
+train_final <- as.data.frame(as.matrix(dtm_idf_train), stringsAsFactors=False)
+train_final <- cbind(train$id, train$name, train_final)
 
 # 2.1.2 -------------------------  Test  ---------------------------------------
 
 tweets_test <- test
 
-p_load("stringi")
-p_load(tm)
 p_load(SnowballC)
-p_load(dplyr)
-p_load(tidyr)
 p_load(Matrix)
 p_load(NLP)
-p_load(text2vec)
 
 # Eliminamos tildes y caracteres especiales del español
 tweets_test <- stri_trans_general(str = test$text, id = "Latin-ASCII")
@@ -142,6 +133,8 @@ tweets_test <- gsub("@\\w+", "", tweets_test)
 tweets_test <- gsub("\\s+", " ", tweets_test)
 # Recortar los espacios en blanco iniciales y finales
 tweets_test <- gsub("^\\s+|\\s+$", "", tweets_test)
+# Remover emojis
+tweets_test <- gsub("[^\x01-\x7F]", "", tweets_test)
 # Quitamos stop words
 p_load(stopwords)
 # Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
@@ -151,16 +144,16 @@ lista_palabras <- union(lista_palabras1, lista_palabras2)
 
 tweets_test <- removeWords(tweets_test, lista_palabras)
 
-# Todo minúscula
-tweets_test <- tm_map(tweets_test,content_transformer(tolower)) 
-#Quitamos números
-#tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
-# Quitamos puntuación
-tweets_test <- tm_map(tweets_test,content_transformer(removePunctuation))
-# Quitamos números
-#tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
-# Quitamos espacios en blanco en medio
-tweets_test <- tm_map(tweets_test,content_transformer(stripWhitespace))
+# # Todo minúscula
+# tweets_test <- tm_map(tweets_test,content_transformer(tolower)) 
+# #Quitamos números
+# #tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
+# # Quitamos puntuación
+# tweets_test <- tm_map(tweets_test,content_transformer(removePunctuation))
+# # Quitamos números
+# #tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
+# # Quitamos espacios en blanco en medio
+# tweets_test <- tm_map(tweets_test,content_transformer(stripWhitespace))
 
 # Stemmizamos 
 tweets_test <- wordStem(tweets_test, language = "spanish")
@@ -169,12 +162,17 @@ corpus_test <- Corpus(VectorSource(tweets_test))
 
 dtm_idf_test<-DocumentTermMatrix(tweets_test,control=list(weighting=weightTfIdf))
 inspect(dtm_idf_test[100:103,])
-
 dim(tweets_test)
 
 # Eliminamos términos que son poco frecuentes en todo el corpus
-dtm_idf_test <- removeSparseTerms(dtm_idf_test, sparse = 0.95)
+dtm_idf_test <- removeSparseTerms(dtm_idf_test, sparse = 0.99)
 inspect(dtm_idf_test[100:103,])
+
+# 2.2 Exportar bases de datos finales --------------------------------------------
+
+# Train
+train_final <- as.data.frame(train)
+write.csv(train_final,"./data/train_final.csv", row.names = FALSE)
 
 
 
