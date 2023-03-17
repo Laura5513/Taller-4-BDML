@@ -79,7 +79,7 @@ ModeloLS<-train(name~.,
                    method = 'glmnet', 
                    trControl = ctrl,
                    tuneGrid = expand.grid(alpha = 1, #lasso
-                                          lambda = seq(0.001,0.1,by = 0.001)),
+                                          lambda = seq(0.001,1,by = 0.001)),
                    metric = "Accuracy"
 ) 
 
@@ -114,14 +114,13 @@ ModeloRidge<- train(name~.,
 
 ## Predicción 1: Predicciones con testing
 pred_test1_ModeloRidge <- predict(ModeloRidge, newdata = testing, type="raw")
-eva_ModeloRidge <- data.frame(obs=testing$price, pred=pred_test1_ModeloRidge) # Data frame con observados y predicciones
-metrics_ModeloRidge <- metrics(eva_ModeloRidge, obs, pred); metrics_ModeloRidge # Cálculo del medidas de precisión
+metrics_ModeloRidge <- confusionMatrix(pred_test1_ModeloRidge, testing$name); metrics_Modelolasso # Cálculo del medidas de precisión
 
 ## Predicción 2: Predicciones con test_bog
-pred_test2_ModeloRidge <- predict(ModeloRidge, newdata = test_bog)
+pred_test2_ModeloRidge <- predict(ModeloRidge, newdata = test_ori)
 
 # Exportar para prueba en Kaggle
-Kaggle_ModeloRidge <- data.frame(property_id=test_bog$property_id, price=pred_test2_ModeloRidge)
+Kaggle_ModeloRidge <- data.frame(id=test_ori$id, name=pred_test2_ModeloRidge)
 write.csv(Kaggle_ModeloRidge,"./stores/Kaggle_ModeloRidge.csv", row.names = FALSE)
 # Accuracy: 
 
@@ -131,7 +130,7 @@ ModeloEN<-caret::train(name~.,
                        method = 'glmnet', 
                        trControl = ctrl,
                        tuneGrid = expand.grid(alpha = seq(0,1,by = 0.01), #Lasso
-                                              lambda = seq(0.001,0.1,by = 0.001)),
+                                              lambda = seq(0.001,1,by = 0.001)),
                        preProcess = c("center", "scale"), 
                        metric = "Accuracy"
 ) 
@@ -148,13 +147,13 @@ metrics_ModeloEN <- confusionMatrix(pred_test1_ModeloEN, testing$name); metrics_
 pred_test2_ModeloEN <- predict(ModeloEN, newdata = test_bog)
 
 # Exportar para prueba en Kaggle
-Kaggle_ModeloEN <- data.frame(property_id=test_bog$property_id, price=pred_test2_ModeloEN)
+Kaggle_ModeloEN <- data.frame(id=test_ori$id, name=pred_test2_ModeloEN)
 write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
 # Accuracy: 
 
 ### 3.5 GBM -------------------------------------------------------------------------------------------
 p_load(gbm)
-grid_gbm<-expand.grid(n.trees=c(300,700,1000),interaction.depth=c(1:4),shrinkage=seq(0.001,0.1,by = 0.001),n.minobsinnode
+grid_gbm<-expand.grid(n.trees=c(300,700,1000),interaction.depth=c(1:4),shrinkage=seq(0.1,1,by = 0.1),n.minobsinnode
                       =seq(10,40,by = 10))
 
 ModeloGBM <- train(name~.,
