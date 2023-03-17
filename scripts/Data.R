@@ -17,7 +17,7 @@ rm(list = ls(all.names = TRUE))
 #setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
 setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 
-list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "tidyr",
+list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "tidyr", "fastDummies",
                      "caret", "glmnet", "MLmetrics", "skimr", "stargazer", 
                      "ggplot2", "plotly",  "Hmisc", "tm", "tidytext", 
                      "wordcloud", "SentimentAnalysis", "stopwords", "stringi", "text2vec")
@@ -78,6 +78,8 @@ tweets_train <- gsub("\\s+", " ", tweets_train)
 tweets_train <- gsub("^\\s+|\\s+$", "", tweets_train)
 # Remover emojis
 tweets_train <- gsub("[^\x01-\x7F]", "", tweets_train)
+# Remover puntuación 
+tweets_train <- gsub("[[:punct:]]", "", tweets_train)
 # Quitamos stop words
 p_load(stopwords)
 # Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
@@ -87,7 +89,7 @@ lista_palabras <- union(lista_palabras1, lista_palabras2)
 
 tweets_train <- removeWords(tweets_train, lista_palabras)
 
-# tweets_train <- Corpus(VectorSource(tweets_train))
+# tweets_train <- Corpus(VectorSource(tweets_train)) ESTO NO CORRE Y CREO QUE NO ES NECESARIO, SI SE UTILIZA, LUEGO NO CORRE LO DE ABAJO
 # # Todo minúscula
 # tweets_train <- tm_map(tweets_train,content_transformer(tolower)) 
 # #Quitamos números
@@ -106,12 +108,8 @@ dtm_idf_train<-DocumentTermMatrix(tweets_train,control=list(weighting=weightTfId
 inspect(dtm_idf_train[100:103,])
 
 # Eliminamos términos que son poco frecuentes en todo el corpus
-dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.99)
+dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.985)
 inspect(dtm_idf_train[100:103,])
-
-# Base de datos final
-train_final <- as.data.frame(as.matrix(dtm_idf_train), stringsAsFactors=False)
-train_final <- cbind(train$id, train$name, train_final)
 
 # 2.1.2 -------------------------  Test  ---------------------------------------
 
@@ -135,6 +133,8 @@ tweets_test <- gsub("\\s+", " ", tweets_test)
 tweets_test <- gsub("^\\s+|\\s+$", "", tweets_test)
 # Remover emojis
 tweets_test <- gsub("[^\x01-\x7F]", "", tweets_test)
+# Remover puntuación 
+tweets_test <- gsub("[[:punct:]]", "", tweets_test)
 # Quitamos stop words
 p_load(stopwords)
 # Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
@@ -170,10 +170,23 @@ inspect(dtm_idf_test[100:103,])
 
 # 2.2 Exportar bases de datos finales --------------------------------------------
 
+# Test final
+test_final <- as.data.frame(as.matrix(dtm_idf_test), stringsAsFactors=False)
+test_final <- cbind(test$id, test_final)
+colnames(test_final) <- c("id", colnames(test_final[2:ncol(test_final)]))
+
+# Train final
+dummy <- ifelse(train$name=="Petro", 1, ifelse(train$name=="Lopez", 2, ifelse(train$name=="Uribe", 3, 0)))
+train_final <- as.data.frame(as.matrix(dtm_idf_train), stringsAsFactors=False)
+train_final <- train_final[, intersect(colnames(test_final), colnames(train_final))]
+train_final <- cbind(train$id, train$name,  dummy, train_final)
+colnames(train_final) <- c("id", "name", "dummy", colnames(train_final[4:ncol(train_final)]))
+
 # Train
-train_final <- as.data.frame(train)
 write.csv(train_final,"./data/train_final.csv", row.names = FALSE)
 
+# Test
+write.csv(test_final,"./data/test_final.csv", row.names = FALSE)
 
 
 
