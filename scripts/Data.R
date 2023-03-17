@@ -76,6 +76,8 @@ tweets_train <- gsub("@\\w+", "", tweets_train)
 tweets_train <- gsub("\\s+", " ", tweets_train)
 # Recortar los espacios en blanco iniciales y finales
 tweets_train <- gsub("^\\s+|\\s+$", "", tweets_train)
+# Remover emojis
+tweets_train <- gsub("[^\x01-\x7F]", "", tweets_train)
 # Quitamos stop words
 p_load(stopwords)
 # Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
@@ -85,16 +87,15 @@ lista_palabras <- union(lista_palabras1, lista_palabras2)
 
 tweets_train <- removeWords(tweets_train, lista_palabras)
 
-# Todo minúscula
-tweets_train <- tm_map(tweets_train,content_transformer(tolower)) 
-#Quitamos números
-#tweets_train <- tm_map(tweets_train,content_transformer(removeNumbers))
-# Quitamos puntuación
-tweets_train <- tm_map(tweets_train,content_transformer(removePunctuation))
-# Quitamos números
-#tweets_train <- tm_map(tweets_train,content_transformer(removeNumbers))
-# Quitamos espacios en blanco en medio
-tweets_train <- tm_map(tweets_train,content_transformer(stripWhitespace))
+# tweets_train <- Corpus(VectorSource(tweets_train))
+# # Todo minúscula
+# tweets_train <- tm_map(tweets_train,content_transformer(tolower)) 
+# #Quitamos números
+# tweets_train <- tm_map(tweets_train,content_transformer(removeNumbers))
+# # Quitamos puntuación
+# tweets_train <- tm_map(tweets_train,content_transformer(removePunctuation))
+# # Quitamos espacios en blanco en medio
+# tweets_train <- tm_map(tweets_train,content_transformer(stripWhitespace))
 
 # Stemmizamos 
 tweets_train <- wordStem(tweets_train, language = "spanish")
@@ -104,202 +105,86 @@ corpus_train <- Corpus(VectorSource(tweets_train))
 dtm_idf_train<-DocumentTermMatrix(tweets_train,control=list(weighting=weightTfIdf))
 inspect(dtm_idf_train[100:103,])
 
-dim(tweets_train)
-
 # Eliminamos términos que son poco frecuentes en todo el corpus
-dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.95)
+dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.99)
 inspect(dtm_idf_train[100:103,])
 
-#Removemos números, puntuación y espacios en blanco excesivos. Ponemos todo en minúsculas y formato ASCII para mejor manejo.
-tweets_train <- stri_trans_general(str = train$text, id = "Latin-ASCII")
-tweets_train <- removeNumbers(tweets_train) # Quitamos números
-tweets_train <- tolower(tweets_train) # Hacemos que todo esté en minúscula 
-tweets_train <- stripWhitespace(tweets_train) # Quitamos los múltiples espacios
-tweets_train <- iconv(tweets_train, from = "UTF-8", to = "ASCII//TRANSLIT") # Convertimos a ASCII para un mejor análsis con R
-
-corpus_train <- Corpus(VectorSource(tweets_train))
-
-corpus_train<-tm_map(corpus_train,removeWords,lista_palabras)
-
-# Vemos cómo va nuestro preprocesamiento con la observación 10
-doc <- corpus_train[[10]]
-cat(paste("Metadata:\n", meta(doc), "\n"))
-cat(paste("Content:\n", content(doc), "\n"))
-
-dtm_idf_train<-DocumentTermMatrix(corpus_train,control=list(weighting=weightTfIdf))
-#Inspeccionemos las filas 100 a 103 de esta matriz
-inspect(dtm_idf_train[100:103,])
-
-train$text[4]
-tweets_train[4]
-
-
-# Tokenizamos
-tweets_train_tidy <- as.data.frame(tweets_train) %>% unnest_tokens( "word", tweets_train)
-
-dim(tweets_train_tidy)
-head(tweets_train_tidy, n = 30)
-
-# Veamos cuáles son las palabras más frecuentes
-tweets_train_tidy %>% 
-  dplyr::count(word, sort = TRUE)   %>% 
-  head()
-
-# Quitamos stopwords
-head(stopwords('spanish'))
-
-tweets_train_tidy2 <- tweets_train_tidy  %>% 
-  anti_join(tibble(word =stopwords("spanish")))
-
-dim(tweets_train_tidy2) # se reducen casi a la mitad la cantidad de palabras
-head(tweets_train_tidy2, n = 30) 
-
-# Vemos cuáles son las palabras más comunes
-wordcloud(tweets_train_tidy2$word, min.freq = 100, 
-          colors= c(rgb(72/255, 191/255, 169/255),rgb(249/255, 220/255, 92/255), rgb(229/255, 249/255, 147/255))) 
-
-class(tweets_train_tidy2$word)
-
-# Sacamos la raíz de las palabras (lematización)
-
-tweets_train_tidy2$radical <- stemDocument(tweets_train_tidy2$word, language="spanish")
-tweets_train_tidy2 %>% head(n=30)
-
-# Generar bigramas a partir del texto de las críticas
-bigrams <- as.data.frame(tweets_train) %>%
-  unnest_tokens(bigram, tweets_train, token = "ngrams", n = 2)
-
-
-stop_words <- data.frame(word1 = stopwords("es"), 
-                         word2 = stopwords("es"))
-
-
-# Eliminar los bigramas que contengan palabras de parada
-bigrams <- bigrams %>%
-  separate(bigram, c("word1", "word2"), sep = " ") %>%
-  anti_join(stop_words, by = "word1") %>%
-  anti_join(stop_words, by = "word2") %>%
-  unite(bigram, word1, word2, sep = " ")
-
-bigram_freq <- bigrams %>%
- dplyr::count(bigram, sort = TRUE)
-
-# Visualizar los bigramas más frecuentes
-ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
-  geom_bar(stat = "identity", fill = "#4e79a7") +
-  ggtitle("Bigramas más frecuentes") +
-  ylab("Bigramas") +
-  xlab("Frecuencia")
-
-# Creamos la Document Term Matrix (DTM)
-
-  # Creamos una copia del texto lematizado
-tweets_train_preprocesado <- tweets_train_tidy2$radical
-
-  # Creamos un corpus de ese texto
-corpus <- Corpus(VectorSource(tweets_train_preprocesado))
-
-  # Creamos un DTM
-dtm <- DocumentTermMatrix(corpus)
-
-matrix_dtm <- as.matrix(dtm)
-
-head(matrix_dtm)
-
+# Base de datos final
+train_final <- as.data.frame(as.matrix(dtm_idf_train), stringsAsFactors=False)
+train_final <- cbind(train$id, train$name, train_final)
 
 # 2.1.2 -------------------------  Test  ---------------------------------------
 
-tweets_test <- test$text
+tweets_test <- test
 
-#Removemos números, puntuación y espacios en blanco excesivos. Ponemos todo en minúsculas y formato ASCII para mejor manejo.
-tweets_test <- removeNumbers(tweets_test)
-tweets_test <- removePunctuation(tweets_test)
-tweets_test <- tolower(tweets_test)
-tweets_test <- stripWhitespace(tweets_test)
-tweets_test <- iconv(tweets_test, from = "UTF-8", to = "ASCII//TRANSLIT")
+p_load(SnowballC)
+p_load(Matrix)
+p_load(NLP)
 
-#tokenizamos
-tweets_test_tidy <- as.data.frame(tweets_test) %>% unnest_tokens( "word", tweets_test)
-
-dim(tweets_test_tidy)
-head(tweets_test_tidy, n = 30)
-
-#Veamos cuáles son las palabras más frecuentes
-tweets_test_tidy %>% 
-  dplyr::count(word, sort = TRUE)   %>% 
-  head()
-
-#quitamos stopwords
-head(stopwords('spanish'))
-
-tweets_test_tidy2 <- tweets_test_tidy  %>% 
-  anti_join(tibble(word =stopwords("spanish")))
-
-dim(tweets_test_tidy2) # se reducen casi a la mitad la cantidad de palabras
-head(tweets_test_tidy2, n = 30) 
-
-# vemos cuáles son las palabras más comunes
-wordcloud(tweets_test_tidy2$word, min.freq = 100, 
-          colors= c(rgb(72/255, 191/255, 169/255),rgb(249/255, 220/255, 92/255), rgb(229/255, 249/255, 147/255))) 
-
-class(tweets_test_tidy2$word)
-
-
-# Sacamos la raíz de las palabras
-
-tweets_test_tidy2$radical <- stemDocument(tweets_test_tidy2$word, language="spanish")
-tweets_test_tidy2 %>% head(n=30)
-
-# Generar bigramas a partir del texto de las críticas
-bigrams <- as.data.frame(tweets_test) %>%
-  unnest_tokens(bigram, tweets_test, token = "ngrams", n = 2)
-
-
-stop_words <- data.frame(word1 = stopwords("es"), 
-                         word2 = stopwords("es"))
-
-
-# Eliminar los bigramas que contengan palabras de parada
-bigrams <- bigrams %>%
-  separate(bigram, c("word1", "word2"), sep = " ") %>%
-  anti_join(stop_words, by = "word1") %>%
-  anti_join(stop_words, by = "word2") %>%
-  unite(bigram, word1, word2, sep = " ")
-
-
-bigram_freq <- bigrams %>%
- dplyr::count(bigram, sort = TRUE)
-
-# Visualizar los bigramas más frecuentes
-ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
-  geom_bar(stat = "identity", fill = "#4e79a7") +
-  ggtitle("Bigramas más frecuentes") +
-  ylab("Bigramas") +
-  xlab("Frecuencia")
-
-# Creamos la Document Term Matrix (DTM)
-
-# Creamos una copia del texto lematizado
-tweets_test_preprocesado <- tweets_test_tidy2$radical
-
-# Creamos un corpus de ese texto
-corpus <- Corpus(VectorSource(tweets_test_preprocesado))
-
-# Creamos un DTM
-dtm <- DocumentTermMatrix(corpus)
-
-inspect(dtm)
-
-
-inspect(tweets_test1)
-
+# Eliminamos tildes y caracteres especiales del español
+tweets_test <- stri_trans_general(str = test$text, id = "Latin-ASCII")
+# Sin URL
+tweets_test <- gsub("http\\S+", "", tweets_test)
+# Sin tetweets_testto de retwitteo
+tweets_test <- gsub("(rt|via)((?:\\b\\W*@\\w+)+)", "", tweets_test)
+# Quitamos @ (@usuario)
+tweets_test <- gsub("@\\w+", "", tweets_test)
+# Quitamos espacios en blanco extras
+tweets_test <- gsub("\\s+", " ", tweets_test)
+# Recortar los espacios en blanco iniciales y finales
+tweets_test <- gsub("^\\s+|\\s+$", "", tweets_test)
+# Remover emojis
+tweets_test <- gsub("[^\x01-\x7F]", "", tweets_test)
+# Quitamos stop words
 p_load(stopwords)
-tweets_test[[101]]
+# Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
 lista_palabras1 <- stopwords(language = "es", source = "snowball")
 lista_palabras2 <- stopwords(language = "es", source = "nltk")
 lista_palabras <- union(lista_palabras1, lista_palabras2)
 
+tweets_test <- removeWords(tweets_test, lista_palabras)
+
+# # Todo minúscula
+# tweets_test <- tm_map(tweets_test,content_transformer(tolower)) 
+# #Quitamos números
+# #tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
+# # Quitamos puntuación
+# tweets_test <- tm_map(tweets_test,content_transformer(removePunctuation))
+# # Quitamos números
+# #tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
+# # Quitamos espacios en blanco en medio
+# tweets_test <- tm_map(tweets_test,content_transformer(stripWhitespace))
+
+# Stemmizamos 
+tweets_test <- wordStem(tweets_test, language = "spanish")
+length(tweets_test)
 corpus_test <- Corpus(VectorSource(tweets_test))
 
-tweets_test1<-tm_map(corpus_test,removeWords,lista_palabras)
-tweets_test[[101]]
+dtm_idf_test<-DocumentTermMatrix(tweets_test,control=list(weighting=weightTfIdf))
+inspect(dtm_idf_test[100:103,])
+dim(tweets_test)
+
+# Eliminamos términos que son poco frecuentes en todo el corpus
+dtm_idf_test <- removeSparseTerms(dtm_idf_test, sparse = 0.99)
+inspect(dtm_idf_test[100:103,])
+
+# 2.2 Exportar bases de datos finales --------------------------------------------
+
+# Train
+train_final <- as.data.frame(train)
+write.csv(train_final,"./data/train_final.csv", row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
