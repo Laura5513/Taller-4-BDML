@@ -14,13 +14,12 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
-#setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
-#setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
+setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 
-list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
-                     "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
-                     "ggplot2", "plotly", "corrplot", "Hmisc", "tm", "tidytext", 
+list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "tidyr",
+                     "caret", "glmnet", "MLmetrics", "skimr", "stargazer", 
+                     "ggplot2", "plotly",  "Hmisc", "tm", "tidytext", 
                      "wordcloud", "SentimentAnalysis", "stopwords", "stringi", "text2vec")
 
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -61,14 +60,9 @@ test <- read_csv("./data/test.csv", col_types = cols(
 
 tweets_train <- train
 
-p_load("stringi")
-p_load(tm)
 p_load(SnowballC)
-p_load(dplyr)
-p_load(tidyr)
 p_load(Matrix)
 p_load(NLP)
-p_load(text2vec)
 
 # Eliminamos tildes y caracteres especiales del español
 tweets_train <- stri_trans_general(str = train$text, id = "Latin-ASCII")
@@ -187,9 +181,8 @@ bigrams <- bigrams %>%
   anti_join(stop_words, by = "word2") %>%
   unite(bigram, word1, word2, sep = " ")
 
-#CÓDIGO QUE FALLA 
-#bigram_freq <- bigrams %>%
- # count(bigram)
+bigram_freq <- bigrams %>%
+ dplyr::count(bigram, sort = TRUE)
 
 # Visualizar los bigramas más frecuentes
 ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
@@ -273,9 +266,9 @@ bigrams <- bigrams %>%
   anti_join(stop_words, by = "word2") %>%
   unite(bigram, word1, word2, sep = " ")
 
-#CÓDIGO QUE FALLA 
-#bigram_freq <- bigrams %>%
-# count(bigram)
+
+bigram_freq <- bigrams %>%
+ dplyr::count(bigram, sort = TRUE)
 
 # Visualizar los bigramas más frecuentes
 ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
