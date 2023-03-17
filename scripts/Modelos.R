@@ -98,7 +98,7 @@ pred_test2_Modelolasso <- predict(ModeloLS, newdata = test_ori)
 Kaggle_Modelolasso <- data.frame(id=test_ori$id, name=pred_test2_Modelolasso)
 write.csv(Kaggle_Modelolasso,"./stores/Kaggle_ModeloLS.csv", row.names = FALSE)
 
-# Accuracy: 
+# Accuracy: 0.60333
 
 ### 3.3 Ridge -------------------------------------------------------------------------------------------
 grid=10^seq(50,-50,length=1000)
@@ -122,7 +122,7 @@ pred_test2_ModeloRidge <- predict(ModeloRidge, newdata = test_ori)
 # Exportar para prueba en Kaggle
 Kaggle_ModeloRidge <- data.frame(id=test_ori$id, name=pred_test2_ModeloRidge)
 write.csv(Kaggle_ModeloRidge,"./stores/Kaggle_ModeloRidge.csv", row.names = FALSE)
-# Accuracy: 
+# Accuracy: 0.60333
 
 ### 3.4 Elastic net -----------------------------------------------------------------------------------
 ModeloEN<-caret::train(name~.,
@@ -144,12 +144,12 @@ pred_test1_ModeloEN <- predict(ModeloEN, newdata = testing) # Predicción
 metrics_ModeloEN <- confusionMatrix(pred_test1_ModeloEN, testing$name); metrics_ModeloEN # Cálculo del medidas de precisión
 
 ## Predicción 2: Predicciones con test_hogares
-pred_test2_ModeloEN <- predict(ModeloEN, newdata = test_bog)
+pred_test2_ModeloEN <- predict(ModeloEN, newdata = test_ori)
 
 # Exportar para prueba en Kaggle
 Kaggle_ModeloEN <- data.frame(id=test_ori$id, name=pred_test2_ModeloEN)
 write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
-# Accuracy: 
+# Accuracy:0.6
 
 ### 3.5 GBM -------------------------------------------------------------------------------------------
 p_load(gbm)
