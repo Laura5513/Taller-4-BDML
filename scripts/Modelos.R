@@ -68,7 +68,48 @@ ctrl <- trainControl(
   method = "cv", 
   number = 10) # número de folds
 
-### 3.1 Logit ------------------------------------------------------------
+### 3.0 PCA -------------------------------------------------------------------------------------------
+p_load(factoextra)
+# Preparación de los datos
+dta_training <- training[, -1]
+dta_testing <- testing[, -1]
+dta_test <- test_ori[, -1]
+# Mapa de correlación
+cor(dta_training)
+# Componentes principales
+res_pca_training <- prcomp(dta_training, scale=TRUE) # PCA de training
+res_pca_training
+res_pca_testing <- prcomp(dta_testing, scale=TRUE) # PCA de testing
+res_pca_testing
+res_pca_test <- prcomp(dta_test, scale=TRUE) # PCA de test
+res_pca_test
+# Valores propios
+p_load("factoextra")
+eig_val_training <- get_eigenvalue(res_pca_training)
+eig_val_training
+eig_val_testing <- get_eigenvalue(res_pca_testing)
+eig_val_testing
+eig_val_test <- get_eigenvalue(res_pca_test)
+eig_val_test
+# ¿Cuántos PCA utilizar? - Codo
+fviz_eig(res_pca_training, addlabels = TRUE, ylim = c(0, 2)) # PCA de training
+fviz_eig(res_pca_testing, addlabels = TRUE, ylim = c(0, 2))  # PCA de testing
+fviz_eig(res_pca_test, addlabels = TRUE, ylim = c(0, 10))     # PCA de test
+
+# Extraer componentes
+p_load("gamlr")
+PCA_training <- predict(res_pca_training)
+PCA_testing <- predict(res_pca_testing)
+PCA_test <- predict(res_pca_test)
+
+# Preparación de Y & X
+Y_training <- training$name
+Y_testing <- testing$name
+PCA_dta_training <- cbind(Y_training, as.data.frame(PCA_training))
+PCA_dta_testing <- cbind(Y_testing, as.data.frame(PCA_testing))
+PCA_dta_test <- as.data.frame(PCA_test)
+
+### 3.1 Logit -----------------------------------------------------------------------------------------
 
 
 
@@ -100,6 +141,23 @@ write.csv(Kaggle_Modelolasso,"./stores/Kaggle_ModeloLS.csv", row.names = FALSE)
 
 # Accuracy: 0.60333
 
+# PCA + Lasso 
+ModeloLS_PCA1<-train(Y_training~.,
+                     data=PCA_dta_training,
+                     method = 'glmnet', 
+                     trControl = ctrl,
+                     tuneGrid = expand.grid(alpha = 1, #lasso
+                                            lambda = seq(0.001,1,by = 0.001)),
+                     metric = "Accuracy"
+)
+
+## Predicción 1: Predicciones con testing
+pred_test1_lassoPCR1 <- predict(ModeloLS_PCA1, newdata = PCA_testing[,1:30]) # Predicción
+metrics_lassoPCR1 <- confusionMatrix(pred_test1_lassoPCR1, testing$name); metrics_lassoPCR1 # Cálculo del medidas de precisión
+
+cvlassoboth <- cv.gamlr(x=as.matrix(cbind(training,PCA_training)), y=Y_training, nfold=10)
+coef(cvlassoboth)
+        
 ### 3.3 Ridge -------------------------------------------------------------------------------------------
 grid=10^seq(50,-50,length=1000)
 
@@ -154,8 +212,8 @@ write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
 ### 3.5 GBM -------------------------------------------------------------------------------------------
 
 p_load(gbm)
-grid_gbm<-expand.grid(n.trees=c(300,700,1000),interaction.depth=c(1:4),shrinkage=seq(0.1,0.5,by = 0.1),n.minobsinnode
-                      =c(10,30,40))
+grid_gbm<-expand.grid(n.trees=c(300,700),interaction.depth=c(1:3),shrinkage=seq(0.1,0.5,by = 0.1),n.minobsinnode
+                      =c(10,30))
 
 ModeloGBM <- train(name~.,
                    data = training, 
