@@ -15,7 +15,7 @@ rm(list = ls(all.names = TRUE))
 # ------------------------------------------------------------------------------------ #
 
 setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
-setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+#setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
@@ -137,8 +137,8 @@ eig_val_testing
 eig_val_test <- get_eigenvalue(res_pca_test)
 eig_val_test
 # ¿Cuántos PCA utilizar? - Codo
-fviz_eig(res_pca_training, addlabels = TRUE, ylim = c(0, 2)) # PCA de training
-fviz_eig(res_pca_testing, addlabels = TRUE, ylim = c(0, 2))  # PCA de testing
+fviz_eig(res_pca_training, addlabels = TRUE, ylim = c(0, 10)) # PCA de training
+fviz_eig(res_pca_testing, addlabels = TRUE, ylim = c(0, 10))  # PCA de testing
 fviz_eig(res_pca_test, addlabels = TRUE, ylim = c(0, 10))     # PCA de test
 
 # Extraer componentes
@@ -184,7 +184,7 @@ pred_test2_Modelolasso <- predict(ModeloLS, newdata = test_ori)
 Kaggle_Modelolasso <- data.frame(id=test_ori$id, name=pred_test2_Modelolasso)
 write.csv(Kaggle_Modelolasso,"./stores/Kaggle_ModeloLS.csv", row.names = FALSE)
 
-# Accuracy: 0.60333
+# Accuracy: 0.77333
 
 # PCA + Lasso 
 ModeloLS_PCA1<-train(Y_training~.,
@@ -204,7 +204,7 @@ cvlassoboth <- cv.gamlr(x=as.matrix(cbind(training,PCA_training)), y=Y_training,
 coef(cvlassoboth)
         
 ### 3.3 Ridge -------------------------------------------------------------------------------------------
-grid=10^seq(50,-50,length=1000)
+grid=10^seq(100,100,length=1000)
 
 ModeloRidge<- train(name~.,
                     data = training,
@@ -225,7 +225,7 @@ pred_test2_ModeloRidge <- predict(ModeloRidge, newdata = test_ori)
 # Exportar para prueba en Kaggle
 Kaggle_ModeloRidge <- data.frame(id=test_ori$id, name=pred_test2_ModeloRidge)
 write.csv(Kaggle_ModeloRidge,"./stores/Kaggle_ModeloRidge.csv", row.names = FALSE)
-# Accuracy: 0.60333
+# Accuracy: 0.77333
 
 ### 3.4 Elastic net -----------------------------------------------------------------------------------
 ModeloEN<-caret::train(name~.,

@@ -16,7 +16,7 @@ rm(list = ls(all.names = TRUE))
 
 #setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
 setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
-setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+#setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "tidyr", "fastDummies",
@@ -82,6 +82,8 @@ tweets_train <- gsub("^\\s+|\\s+$", "", tweets_train)
 tweets_train <- gsub("[^\x01-\x7F]", "", tweets_train)
 # Remover puntuación 
 tweets_train <- gsub("[[:punct:]]", "", tweets_train)
+# Remover números
+tweets_train <- gsub('[0-9]+', '', tweets_train)
 # Quitamos stop words
 p_load(stopwords)
 # Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
@@ -110,7 +112,7 @@ dtm_idf_train<-DocumentTermMatrix(tweets_train,control=list(weighting=weightTfId
 inspect(dtm_idf_train[100:103,])
 
 # Eliminamos términos que son poco frecuentes en todo el corpus
-dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.985)
+dtm_idf_train <- removeSparseTerms(dtm_idf_train, sparse = 0.999)
 inspect(dtm_idf_train[100:103,])
 
 # 2.1.2 -------------------------  Test  ---------------------------------------
@@ -137,6 +139,8 @@ tweets_test <- gsub("^\\s+|\\s+$", "", tweets_test)
 tweets_test <- gsub("[^\x01-\x7F]", "", tweets_test)
 # Remover puntuación 
 tweets_test <- gsub("[[:punct:]]", "", tweets_test)
+# Remover números
+tweets_test <- gsub('[0-9]+', '', tweets_test)
 # Quitamos stop words
 p_load(stopwords)
 # Descargamos la lista de las stopwords en español de dos fuentes diferentes y las combinamos
@@ -167,7 +171,7 @@ inspect(dtm_idf_test[100:103,])
 dim(tweets_test)
 
 # Eliminamos términos que son poco frecuentes en todo el corpus
-dtm_idf_test <- removeSparseTerms(dtm_idf_test, sparse = 0.99)
+dtm_idf_test <- removeSparseTerms(dtm_idf_test, sparse = 0.999)
 inspect(dtm_idf_test[100:103,])
 
 # 2.2 Exportar bases de datos finales --------------------------------------------
