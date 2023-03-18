@@ -14,8 +14,9 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
+#setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 #setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
@@ -54,31 +55,46 @@ any(is.na(test_ori)) # No.
 train_pca<-train_ori[,-1]
 train_pca
 
-cor(train_pca)
+x<- cor(train_pca)
+x
 
 res_pca <- prcomp(train_pca)
 res_pca
+pc_scores <- res_pca[["center"]]
+pc_numbers <- res_pca$x
+pc_df <- cbind(observation_id = colnames(train_pca), as.data.frame(pc_scores))
+pc_df2 <- cbind(observation_id = rownames(train_pca), as.data.frame(pc_numbers))
+nrow(pc_df2)
 
 p_load("factoextra")
 eig_val <- get_eigenvalue(res_pca)
-eig_val
+eig_val <- as.data.frame(eig_val)
 
-fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 70))
+# Find the row index of the first value in cumulative.variance.percent >= 90
+row_index <- which.max(eig_val$cumulative.variance.percent >= 90)
+# Extract the corresponding value of cumulative.variance.percent
+percent90 <- eig_val$cumulative.variance.percent[row_index]
+# Print the result
+cat("The first value in cumulative.variance.percent >= 90 is", percent90, "at row", row_index, "\n")
+row_label <- rownames(eig_val)[1342] #Dim. 1342 explicamos el 90%
 
-fviz_pca_biplot(res_pca, 
-                repel = TRUE,# Avoid text overlapping
-                col.var = "#2E9FDF", # Variables color
-                col.ind = "#696969"  # Individuals color
+codo<- fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 3)) #solo llega a 10  no ayuda mucho    
+codo
+
+dimensiones<- fviz_pca_biplot(res_pca,  
+                              col.ind = train_ori$name,
+                              palette = c("blue", "green", "red"),
+                              invisible ="var",
+                              repel=TRUE,
+                              labelsize = 2
 )
+dimensiones
 
+#---------- este no entiendo que haces
 PCApilot <- prcomp(train_pca, scale=TRUE)
-
 fviz_eig(PCApilot, addlabels = TRUE, ylim = c(0, 45))
 
-
 round(PCApilot$rotation[,1:3],1)
-
-
 p_load("gamlr")
 
 zpilot <- predict(PCApilot)
@@ -91,6 +107,16 @@ summary(PEglm <- glm(name ~ ., data=zdf[,1:2]))
 
 cvlassoboth <- cv.gamlr(x=as.matrix(cbind(train_pca,zpilot)), y=name, nfold=10)
 coef(cvlassoboth)
+#--------------
+
+tweetpc <- predict(res_pca)
+cuenta <- train_ori$name
+zdf <- as.data.frame(tweetpc)
+
+
+  PEglm <- glm(cuenta ~ ., data=zdf[,1:1342])
+
+round_components <- as.data.frame(round(res_pca$rotation[,1:1342],1)) #esto esta nice 
 
 # ------------------------------------------------------------------------------------ #
 # 3. Modelos
