@@ -111,7 +111,8 @@ coef(cvlassoboth)
 train_ori <- train_ori$name
 tweetpc <- predict(res_pca)
 cuenta <- train_ori$name
-tweetdf <- as.data.frame(tweetpc)
+tweetdf <- as.data.frame(tweetpc) 
+tweetdf <- tweetdf[, 1:1342]
 round_components <- as.data.frame(round(res_pca$rotation[,1:1342],1)) #esto esta nice 
 
 #MODELOS ----------------------------------
@@ -119,7 +120,8 @@ round_components <- as.data.frame(round(res_pca$rotation[,1:1342],1)) #esto esta
 cuentaglm <- glm(cuenta ~ ., data=tweetdf[,1:1342]) 
 
 #2. Lasso
-cvlassoPCA <- cv.gamlr(x=cuenta, y=PE, nfold=10) 
+p_load(gamlr)
+cvlassoPCA <- cv.gamlr(x=tweetdf, y=cuenta, nfold=10) 
 coef(cvlassoPCA) 
 
 #2.1 lasso con data frame normal y con pca
