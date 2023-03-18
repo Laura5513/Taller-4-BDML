@@ -171,11 +171,11 @@ ModeloGBM$finalModel
 ### Variable Importance
 plot(varImp(ModeloGBM,scale=TRUE))
 
-## Predicción 1: Predicciones con hog_testing
+## Predicción 1: Predicciones con testing
 pred_test1_ModeloGBM <- predict(ModeloGBM, newdata = testing, type="raw")
 metrics_ModeloGBM <- confusionMatrix(pred_test1_ModeloGBM, testing$name); metrics_ModeloGBM # Cálculo del medidas de precisión
 
-## Predicción 2: Predicciones con test_hogares
+## Predicción 2: Predicciones con test_ori
 pred_test2_ModeloGBM <- predict(ModeloGBM, newdata = test_ori)
 
 # Exportar para prueba en Kaggle
@@ -250,7 +250,7 @@ pred_test1_Super2 <- testing$yhat_Sup
 eva_ModeloSuper2 <- data.frame(obs=testing$price, pred=pred_test1_ModeloSuper2) # Data frame con observados y predicciones
 metrics_ModeloSuper2 <- metrics(eva_ModeloSuper2, obs, pred); metrics_ModeloSuper2 # Cálculo del medidas de precisión
 
-## Predicción 2: Predicciones con test_bog
+## Predicción 2: Predicciones con test_ori
 test_bog <- test_bog  %>%  mutate(yhat_Sup=predict(ModeloSuper2, newdata = data.frame(test_bog), onlySL = T)$pred)
 pred_test2_ModeloSuper2 <- test_bog$yhat_Sup
 
@@ -262,9 +262,68 @@ write.csv(Kaggle_ModeloSuper2,"./stores/Kaggle_ModeloSuper2.csv", row.names = FA
 
 
 ### 3.7 Red neuronal -------------------------------------------------------------------------------------------
+install.packages('keras')
+library(keras)
 
+# Variable Y
+Y_training <- training$name
+Y_training <- to_categorical(Y_train)
+head(Y_training)
+dim(Y_training)
+class(Y_training)
+# Matriz X
+tf_training <- training[, -1]
+X_training <- as.matrix(tf_training)
+class(X_training)
+set.seed(666)
+n_h = nrow(X_training)/(2*(ncol(X_training) + 5))
+model <- keras_model_sequential() 
+# Premio para el que me diga la formula de la función de activación softmax
+# y me diga que es
+model %>% 
+  layer_dense(units = 10, activation = 'relu', input_shape = ncol(X_training)) %>% 
+  layer_dropout(rate = 0.5) %>%
+  layer_dense(units = 3, activation = 'softmax')
+summary(model)
 
+model %>% compile(
+  optimizer = 'adam',
+  loss = 'categorical_crossentropy',
+  metrics = c('CategoricalAccuracy')
+)
 
+history <- model %>% 
+  fit(
+    X_training, Y_training, 
+    epochs = 5, 
+    # Truco pa la vida. El batch_size debe ser un número del estilo 2^x por motivos
+    # de eficiencia computacional
+    batch_size = 2^8,
+    # Toca set pequeño de validación porque estamos jodidos de datos
+    validation_split = 0.2
+  )
 
+## Predicción 1: Predicciones con testing
+# Variable Y
+Y_testing <- testing$name
+Y_testing <- to_categorical(Y_testing)
+# Matriz X
+tf_testing <- testing
+X_testing <- as.matrix(tf_testing)
 
+model %>% evaluate(X_testing, Y_testing)
+y_hat_testing <- model  %>% predict(X_testing) %>% k_argmax()
 
+confusionMatrix(data = factor(as.numeric(y_hat_testing), levels = 1:5), 
+                reference = factor(testing$name, levels = 1:5))
+
+## Predicción 1: Predicciones con test_ori
+# Variable Y
+tf_test <- test_ori[, -1]
+X_test <- as.matrix(tf_test)
+
+y_hat_test <- model  %>% predict(X_test) %>% k_argmax()
+
+# Exportar para prueba en Kaggle
+Kaggle_ModeloNN <- data.frame(id=test_ori$id, name=as.numeric(y_hat_test))
+write.csv(Kaggle_ModeloNN,"./stores/Kaggle_ModeloNN.csv", row.names = FALSE)
