@@ -15,6 +15,7 @@ rm(list = ls(all.names = TRUE))
 # ------------------------------------------------------------------------------------ #
 
 setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
+setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
@@ -46,6 +47,50 @@ test_ori <- read_csv("./data/test_final.csv")
 # ¿Hay datos vacios?
 any(is.na(train_ori)) # No.
 any(is.na(test_ori)) # No.
+
+# ------------------------------------------------------------------------------------ #
+#  PCA
+# ------------------------------------------------------------------------------------ #
+train_pca<-train_ori[,-1]
+train_pca
+
+cor(train_pca)
+
+res_pca <- prcomp(train_pca)
+res_pca
+
+p_load("factoextra")
+eig_val <- get_eigenvalue(res_pca)
+eig_val
+
+fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 70))
+
+fviz_pca_biplot(res_pca, 
+                repel = TRUE,# Avoid text overlapping
+                col.var = "#2E9FDF", # Variables color
+                col.ind = "#696969"  # Individuals color
+)
+
+PCApilot <- prcomp(train_pca, scale=TRUE)
+
+fviz_eig(PCApilot, addlabels = TRUE, ylim = c(0, 45))
+
+
+round(PCApilot$rotation[,1:3],1)
+
+
+p_load("gamlr")
+
+zpilot <- predict(PCApilot)
+
+name <- train_pca$name ## no se que pasaa :(
+zdf <- as.data.frame(zpilot)
+
+summary(PEglm <- glm(name ~ ., data=zdf[,1:2]))
+
+
+cvlassoboth <- cv.gamlr(x=as.matrix(cbind(train_pca,zpilot)), y=name, nfold=10)
+coef(cvlassoboth)
 
 # ------------------------------------------------------------------------------------ #
 # 3. Modelos
@@ -152,10 +197,11 @@ ModeloLS_PCA1<-train(Y_training~.,
 )
 
 ## Predicción 1: Predicciones con testing
-pred_test1_lassoPCA1 <- predict(ModeloLS_PCA1, newdata = PCA_testing) # Predicción
-metrics_lassoPCR1 <- confusionMatrix(pred_test1_lassoPCA1, testing$name); metrics_lassoPCR1 # Cálculo del medidas de precisión
+pred_test1_lassoPCR1 <- predict(ModeloLS_PCA1, newdata = PCA_testing[,1:30]) # Predicción
+metrics_lassoPCR1 <- confusionMatrix(pred_test1_lassoPCR1, testing$name); metrics_lassoPCR1 # Cálculo del medidas de precisión
 
-
+cvlassoboth <- cv.gamlr(x=as.matrix(cbind(training,PCA_training)), y=Y_training, nfold=10)
+coef(cvlassoboth)
         
 ### 3.3 Ridge -------------------------------------------------------------------------------------------
 grid=10^seq(50,-50,length=1000)
