@@ -113,8 +113,7 @@ tweetpc <- predict(res_pca)
 cuenta <- train_ori$name
 zdf <- as.data.frame(tweetpc)
 
-
-  PEglm <- glm(cuenta ~ ., data=zdf[,1:1342])
+cuentaglm <- glm(cuenta ~ ., data=zdf[,1:1342])
 
 round_components <- as.data.frame(round(res_pca$rotation[,1:1342],1)) #esto esta nice 
 
