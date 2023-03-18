@@ -152,9 +152,10 @@ write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
 # Accuracy:0.6
 
 ### 3.5 GBM -------------------------------------------------------------------------------------------
+
 p_load(gbm)
-grid_gbm<-expand.grid(n.trees=c(300,700,1000),interaction.depth=c(1:4),shrinkage=seq(0.1,1,by = 0.1),n.minobsinnode
-                      =seq(10,40,by = 10))
+grid_gbm<-expand.grid(n.trees=c(300,700,1000),interaction.depth=c(1:4),shrinkage=seq(0.1,0.5,by = 0.1),n.minobsinnode
+                      =c(10,30,40))
 
 ModeloGBM <- train(name~.,
                    data = training, 
@@ -262,12 +263,13 @@ write.csv(Kaggle_ModeloSuper2,"./stores/Kaggle_ModeloSuper2.csv", row.names = FA
 
 
 ### 3.7 Red neuronal -------------------------------------------------------------------------------------------
-install.packages('keras')
+install.packages('kerasR')
 library(keras)
+library(kerasR)
 
 # Variable Y
 Y_training <- training$name
-Y_training <- to_categorical(Y_train)
+Y_training <- to_categorical(Y_training)
 head(Y_training)
 dim(Y_training)
 class(Y_training)
