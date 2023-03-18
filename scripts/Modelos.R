@@ -108,14 +108,23 @@ summary(PEglm <- glm(name ~ ., data=zdf[,1:2]))
 cvlassoboth <- cv.gamlr(x=as.matrix(cbind(train_pca,zpilot)), y=name, nfold=10)
 coef(cvlassoboth)
 #--------------
-
+train_ori <- train_ori$name
 tweetpc <- predict(res_pca)
 cuenta <- train_ori$name
-zdf <- as.data.frame(tweetpc)
-
-cuentaglm <- glm(cuenta ~ ., data=zdf[,1:1342])
-
+tweetdf <- as.data.frame(tweetpc)
 round_components <- as.data.frame(round(res_pca$rotation[,1:1342],1)) #esto esta nice 
+
+#MODELOS ----------------------------------
+#1. glm
+cuentaglm <- glm(cuenta ~ ., data=tweetdf[,1:1342]) 
+
+#2. Lasso
+cvlassoPCA <- cv.gamlr(x=cuenta, y=PE, nfold=10) 
+coef(cvlassoPCA) 
+
+#2.1 lasso con data frame normal y con pca
+cvlassoboth <- cv.gamlr(x=as.matrix(cbind(train_pca,tweetdf)), y=cuenta, nfold=10)
+coef(cvlassoboth)
 
 # ------------------------------------------------------------------------------------ #
 # 3. Modelos
