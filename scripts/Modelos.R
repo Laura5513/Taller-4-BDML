@@ -232,7 +232,7 @@ ModeloEN<-caret::train(name~.,
                        data=training,
                        method = 'glmnet', 
                        trControl = ctrl,
-                       tuneGrid = expand.grid(alpha = seq(0,1,by = 0.01), #Lasso
+                       tuneGrid = expand.grid(alpha = seq(0,1,by = 0.001), #Lasso
                                               lambda = seq(0.001,1,by = 0.001)),
                        preProcess = c("center", "scale"), 
                        metric = "Accuracy"
