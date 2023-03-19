@@ -14,8 +14,9 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
+setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
 setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
+setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "tidyr",
                      "caret", "glmnet", "MLmetrics", "skimr", "stargazer", 
@@ -303,3 +304,8 @@ corpus_test <- Corpus(VectorSource(tweets_test))
 
 tweets_test1<-tm_map(corpus_test,removeWords,lista_palabras)
 tweets_test[[101]]
+
+
+
+
+

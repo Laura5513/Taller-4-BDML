@@ -1,10 +1,10 @@
 #**************************************************************************************#
-#                                    TALLER 4 BDML                                     #
+#                                    TALLER 3 BDML                                     #
 #                        Uniandes: Sofia Charry Tobar                                  #
 #                                  Laura Manuela Rodríguez Morales                     #
 #                                  Nicol Valeria Rodríguez Rodríguez                   #
 #                                  Brayan Alexander Vargas Rojas                       #
-#                          Fuente: Twitter                                             #
+#                          Fuente: Properati                                           #
 #**************************************************************************************#
 
 # Limpiar el espacio
@@ -17,8 +17,6 @@ rm(list = ls(all.names = TRUE))
 #setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 #setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
-#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
-
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
@@ -58,7 +56,6 @@ train_des <- train_ori %>%
     name == "Lopez" ~ 2,
     name == "Petro" ~ 3
   ))
-stargazer(train_des, type = "latex", title = "Estadísticas descriptivas", align = TRUE)
 
 
 set.seed(0000)
@@ -139,7 +136,7 @@ percent90_t <- eig_val_testing$cumulative.variance.percent[row_index_t]
 # Print the result
 cat("The first value in cumulative.variance.percent >= 90 is", percent90_t, "at Dim", row_index_t, "\n")
 
-round_components_t <- as.data.frame(round(res_pca_testing$rotation[,1:1342],1)) 
+round_components_t <- as.data.frame(round(res_pca_testing$rotation[,1:957],1)) 
 
 codo_t<- fviz_eig(res_pca_testing, addlabels = TRUE, ylim = c(0, 3)) #solo llega a 10  no ayuda mucho    
 codo_t
@@ -155,7 +152,7 @@ dimensiones_t
 
 predict_testing_pca <- predict(res_pca_testing)
 predict_testing_pca <- as.data.frame(predict_testing_pca) 
-predict_testing_pca <- predict_testing_pca[, 1:1342]
+predict_testing_pca <- predict_testing_pca[, 1:957]
 
 # PARA TEST-------------
 test_pca<-test_ori[,-1]
@@ -180,7 +177,7 @@ round_components <- as.data.frame(round(res_test_pca$rotation[,1:859],1))
 
 predict_test_pca <- predict(res_test_pca)
 predict_test_pca <- as.data.frame(predict_test_pca) 
-Test_pca <- predict_test_pca[, 1:1342]
+Test_pca <- predict_test_pca[, 1:859]
 
 # ------------ conclusiones PCA ------------------------- #
 # Preparación de Y & X
@@ -237,8 +234,8 @@ ModeloLS_PCA1<-train(Y_training~.,
 )
 
 ## Predicción 1: Predicciones con testing
-pred_test1_lassoPCR1 <- predict(ModeloLS_PCA1, newdata = PCA_dta_testing) # Predicción
-metrics_lassoPCR1 <- confusionMatrix(pred_test1_lassoPCR1, PCA_dta_testing$Y_testing); metrics_lassoPCR1 # Cálculo del medidas de precisión
+pred_test1_lassoPCR1 <- predict(ModeloLS_PCA1, newdata = PCA_testing[,1:30]) # Predicción
+metrics_lassoPCR1 <- confusionMatrix(pred_test1_lassoPCR1, testing$name); metrics_lassoPCR1 # Cálculo del medidas de precisión
 
 cvlassoboth <- cv.gamlr(x=as.matrix(cbind(training,PCA_training)), y=Y_training, nfold=10)
 coef(cvlassoboth)
@@ -285,33 +282,6 @@ ModeloEN$bestTune
 ## Predicción 1: Predicciones con hog_testing
 pred_test1_ModeloEN <- predict(ModeloEN, newdata = testing) # Predicción
 metrics_ModeloEN <- confusionMatrix(pred_test1_ModeloEN, testing$name); metrics_ModeloEN # Cálculo del medidas de precisión
-
-## Predicción 2: Predicciones con test_hogares
-pred_test2_ModeloEN <- predict(ModeloEN, newdata = test_ori)
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloEN <- data.frame(id=test_ori$id, name=pred_test2_ModeloEN)
-write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
-# Accuracy:0.6
-
-#con pca 
-ModeloEN<-caret::train(Y_training~.,
-                       data=PCA_dta_training,
-                       method = 'glmnet', 
-                       trControl = ctrl,
-                       tuneGrid = expand.grid(alpha = seq(0,1,by = 0.001), #Lasso
-                                              lambda = seq(0.001,1,by = 0.001)),
-                       preProcess = c("center", "scale"), 
-                       metric = "Accuracy"
-) 
-
-summary(ModeloEN) # Resumen del modelo
-ggplot(varImp(ModeloEN)) # Gráfico de importancia de las variables
-ModeloEN$bestTune
-
-## Predicción 1: Predicciones con hog_testing
-pred_test1_ModeloEN <- predict(ModeloEN, newdata = PCA_dta_testing) # Predicción
-metrics_ModeloEN <- confusionMatrix(pred_test1_ModeloEN, PCA_dta_testing$Y_testing); metrics_ModeloEN # Cálculo del medidas de precisión
 
 ## Predicción 2: Predicciones con test_hogares
 pred_test2_ModeloEN <- predict(ModeloEN, newdata = test_ori)
