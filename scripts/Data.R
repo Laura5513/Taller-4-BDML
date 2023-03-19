@@ -14,8 +14,8 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
-setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
+setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
+#setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 #setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 
 
@@ -93,16 +93,6 @@ lista_palabras <- union(lista_palabras1, lista_palabras2)
 
 tweets_train <- removeWords(tweets_train, lista_palabras)
 
-# tweets_train <- Corpus(VectorSource(tweets_train)) ESTO NO CORRE Y CREO QUE NO ES NECESARIO, SI SE UTILIZA, LUEGO NO CORRE LO DE ABAJO
-# # Todo minúscula
-# tweets_train <- tm_map(tweets_train,content_transformer(tolower)) 
-# #Quitamos números
-# tweets_train <- tm_map(tweets_train,content_transformer(removeNumbers))
-# # Quitamos puntuación
-# tweets_train <- tm_map(tweets_train,content_transformer(removePunctuation))
-# # Quitamos espacios en blanco en medio
-# tweets_train <- tm_map(tweets_train,content_transformer(stripWhitespace))
-
 # Stemmizamos 
 tweets_train <- wordStem(tweets_train, language = "spanish")
 length(tweets_train)
@@ -149,17 +139,6 @@ lista_palabras2 <- stopwords(language = "es", source = "nltk")
 lista_palabras <- union(lista_palabras1, lista_palabras2)
 
 tweets_test <- removeWords(tweets_test, lista_palabras)
-
-# # Todo minúscula
-# tweets_test <- tm_map(tweets_test,content_transformer(tolower)) 
-# #Quitamos números
-# #tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
-# # Quitamos puntuación
-# tweets_test <- tm_map(tweets_test,content_transformer(removePunctuation))
-# # Quitamos números
-# #tweets_test <- tm_map(tweets_test,content_transformer(removeNumbers))
-# # Quitamos espacios en blanco en medio
-# tweets_test <- tm_map(tweets_test,content_transformer(stripWhitespace))
 
 # Stemmizamos 
 tweets_test <- wordStem(tweets_test, language = "spanish")

@@ -17,6 +17,8 @@ rm(list = ls(all.names = TRUE))
 #setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 #setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
+#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
+
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
