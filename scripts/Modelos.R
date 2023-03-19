@@ -119,7 +119,7 @@ round_components <- as.data.frame(round(res_pca$rotation[,1:1342],1)) #esto esta
 #1. glm
 cuentaglm <- glm(cuenta ~ ., data=tweetdf[,1:1342]) 
 
-#2. Lasso
+#2. Lasso                                              --- falta resultados 
 p_load(gamlr)
 cvlassoPCA <- cv.gamlr(x=tweetdf, y=cuenta, nfold=10) 
 coef(cvlassoPCA) 
@@ -165,7 +165,6 @@ res_pca_testing
 res_pca_test <- prcomp(dta_test, scale=TRUE) # PCA de test
 res_pca_test
 # Valores propios
-p_load("factoextra")
 eig_val_training <- get_eigenvalue(res_pca_training)
 eig_val_training
 eig_val_testing <- get_eigenvalue(res_pca_testing)
