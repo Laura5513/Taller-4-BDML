@@ -15,8 +15,8 @@ rm(list = ls(all.names = TRUE))
 # ------------------------------------------------------------------------------------ #
 
 #setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
-#setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
-setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
+setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+#setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
@@ -48,6 +48,16 @@ test_ori <- read_csv("./data/test_final.csv")
 # ¿Hay datos vacios?
 any(is.na(train_ori)) # No.
 any(is.na(test_ori)) # No.
+
+## Estadísticas des
+train_des <- train_ori %>%
+  mutate(name = case_when(
+    name == "Uribe" ~ 1,
+    name == "Lopez" ~ 2,
+    name == "Petro" ~ 3
+  ))
+stargazer(train_des, type = "latex", title = "Estadísticas descriptivas", align = TRUE)
+
 
 # ------------------------------------------------------------------------------------ #
 #  PCA
