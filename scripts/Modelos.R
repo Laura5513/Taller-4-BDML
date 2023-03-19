@@ -14,8 +14,9 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
-#setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+#setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
+setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+#setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
@@ -48,37 +49,62 @@ test_ori <- read_csv("./data/test_final.csv")
 any(is.na(train_ori)) # No.
 any(is.na(test_ori)) # No.
 
+## Estadísticas des
+train_des <- train_ori %>%
+  mutate(name = case_when(
+    name == "Uribe" ~ 1,
+    name == "Lopez" ~ 2,
+    name == "Petro" ~ 3
+  ))
+stargazer(train_des, type = "latex", title = "Estadísticas descriptivas", align = TRUE)
+
+
 # ------------------------------------------------------------------------------------ #
 #  PCA
 # ------------------------------------------------------------------------------------ #
 train_pca<-train_ori[,-1]
 train_pca
 
-cor(train_pca)
+x<- cor(train_pca)
+x
 
 res_pca <- prcomp(train_pca)
 res_pca
+pc_scores <- res_pca[["center"]]
+pc_numbers <- res_pca$x
+pc_df <- cbind(observation_id = colnames(train_pca), as.data.frame(pc_scores))
+pc_df2 <- cbind(observation_id = rownames(train_pca), as.data.frame(pc_numbers))
+nrow(pc_df2)
 
 p_load("factoextra")
 eig_val <- get_eigenvalue(res_pca)
-eig_val
+eig_val <- as.data.frame(eig_val)
 
-fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 70))
+# Find the row index of the first value in cumulative.variance.percent >= 90
+row_index <- which.max(eig_val$cumulative.variance.percent >= 90)
+# Extract the corresponding value of cumulative.variance.percent
+percent90 <- eig_val$cumulative.variance.percent[row_index]
+# Print the result
+cat("The first value in cumulative.variance.percent >= 90 is", percent90, "at row", row_index, "\n")
+row_label <- rownames(eig_val)[1342] #Dim. 1342 explicamos el 90%
 
-fviz_pca_biplot(res_pca, 
-                repel = TRUE,# Avoid text overlapping
-                col.var = "#2E9FDF", # Variables color
-                col.ind = "#696969"  # Individuals color
+codo<- fviz_eig(res_pca, addlabels = TRUE, ylim = c(0, 3)) #solo llega a 10  no ayuda mucho    
+codo
+
+dimensiones<- fviz_pca_biplot(res_pca,  
+                              col.ind = train_ori$name,
+                              palette = c("blue", "green", "red"),
+                              invisible ="var",
+                              repel=TRUE,
+                              labelsize = 2
 )
+dimensiones
 
+#---------- este no entiendo que haces
 PCApilot <- prcomp(train_pca, scale=TRUE)
-
 fviz_eig(PCApilot, addlabels = TRUE, ylim = c(0, 45))
 
-
 round(PCApilot$rotation[,1:3],1)
-
-
 p_load("gamlr")
 
 zpilot <- predict(PCApilot)
@@ -90,6 +116,26 @@ summary(PEglm <- glm(name ~ ., data=zdf[,1:2]))
 
 
 cvlassoboth <- cv.gamlr(x=as.matrix(cbind(train_pca,zpilot)), y=name, nfold=10)
+coef(cvlassoboth)
+#--------------
+train_ori <- train_ori$name
+tweetpc <- predict(res_pca)
+cuenta <- train_ori$name
+tweetdf <- as.data.frame(tweetpc) 
+tweetdf <- tweetdf[, 1:1342]
+round_components <- as.data.frame(round(res_pca$rotation[,1:1342],1)) #esto esta nice 
+
+#MODELOS ----------------------------------
+#1. glm
+cuentaglm <- glm(cuenta ~ ., data=tweetdf[,1:1342]) 
+
+#2. Lasso                                              --- falta resultados 
+p_load(gamlr)
+cvlassoPCA <- cv.gamlr(x=tweetdf, y=cuenta, nfold=10) 
+coef(cvlassoPCA) 
+
+#2.1 lasso con data frame normal y con pca
+cvlassoboth <- cv.gamlr(x=as.matrix(cbind(train_pca,tweetdf)), y=cuenta, nfold=10)
 coef(cvlassoboth)
 
 # ------------------------------------------------------------------------------------ #
@@ -129,7 +175,6 @@ res_pca_testing
 res_pca_test <- prcomp(dta_test, scale=TRUE) # PCA de test
 res_pca_test
 # Valores propios
-p_load("factoextra")
 eig_val_training <- get_eigenvalue(res_pca_training)
 eig_val_training
 eig_val_testing <- get_eigenvalue(res_pca_testing)
@@ -232,7 +277,7 @@ ModeloEN<-caret::train(name~.,
                        data=training,
                        method = 'glmnet', 
                        trControl = ctrl,
-                       tuneGrid = expand.grid(alpha = seq(0,1,by = 0.01), #Lasso
+                       tuneGrid = expand.grid(alpha = seq(0,1,by = 0.001), #Lasso
                                               lambda = seq(0.001,1,by = 0.001)),
                        preProcess = c("center", "scale"), 
                        metric = "Accuracy"
