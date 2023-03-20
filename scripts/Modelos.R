@@ -277,6 +277,7 @@ ModeloLS<-train(name~.,
 summary(ModeloLS) # Resumen del modelo
 coef_lasso<-coef(ModeloLS$finalModel, ModeloLS$bestTune$lambda)
 coef_lasso
+ggplot(varImp(ModeloLS)) # Gráfico de importancia de las variables
 
 ## Predicción 1: Predicciones con testing
 pred_test1_Modelolasso <- predict(ModeloLS, newdata = testing) # Predicción
