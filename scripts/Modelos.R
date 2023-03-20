@@ -76,8 +76,10 @@ nrow(train_ori) # El conjunto de entrenamiento contiene el 70% de la base origin
 
 # Exportamos Training
 write.csv(training,"./data/training.csv", row.names = FALSE)
-# Exportamos Testing
+# Exportamos Testing (validación)
 write.csv(testing,"./data/testing.csv", row.names = FALSE)
+# Exportamos Test_ori
+write.csv(test_ori,"./data/test_ori.csv", row.names = FALSE)
 
 # Cross-validation
 ctrl <- trainControl(
@@ -207,6 +209,29 @@ write.csv(PCA_dta_testing,"./data/PCA_dta_testing1.csv", row.names = FALSE)
 # ------------------------------------------------------------------------------------ #
 
 ### 3.1 Logit -----------------------------------------------------------------------------------------
+
+ModeloLogit <- glm(name~., family="binomial", data=training)
+
+ModeloLogitPCA <- glm(Y_training~., family="binomial", data=PCA_dta_training)
+
+head(PCA_dta_training)
+
+summary(ModeloLogit) # Resumen del modelo
+
+## Predicción 1: Predicciones con testing
+pred_test1_ModeloLogit <- predict(ModeloLogit, newdata = ) # Predicción
+metrics_ModeloLogit <- confusionMatrix(pred_test1_ModeloLogit, testing$name); metrics_ModeloLogit # Cálculo del medidas de precisión
+
+pred_test1_ModeloLogitPCA <- predict(ModeloLogitPCA, newdata = ) # Predicción
+metrics_ModeloLogitPCA <- confusionMatrix(pred_test1_ModeloLogitPCA, testing$name); metrics_ModeloLogitPCA # Cálculo del medidas de precisión
+
+
+## Predicción 2: Predicciones con test
+pred_test1_ModeloLogit <- predict(ModeloLogit, newdata = test_ori)
+
+# Exportar para prueba en Kaggle
+Kaggle_Modelolasso <- data.frame(id=test_ori$id, name=pred_test2_Modelolasso)
+write.csv(Kaggle_Modelolasso,"./stores/Kaggle_ModeloLS.csv", row.names = FALSE)
 
 
 
