@@ -88,7 +88,6 @@ ctrl <- trainControl(
 #          CON LAS BASES PROCESADAS CONJUNTAMENTE
 #------------------------------------------------------------------------------------- #
 
-
 # Train
 train_ori1 <- read_csv("./data/train_final1.csv")
 head(train_ori1)
@@ -366,19 +365,52 @@ library(gbm)
 
 Y_training1 <- training1$name
 Y_testing1 <- testing1$name
-X_training1 <- training1$name
-x_testing1 <- subset(training1, select = -name)
-Y_training1 <- subset(training1, select = -name)
+X_training1 <- subset(training1, select = -name) # 70% de entrenamiento de la base train_final1
+x_testing1 <- subset(testing1, select = -name) # 30% de validación de la base train_final1
+X_test1 <- test_ori # test
+
+length(Y_training1)
+length(Y_testing1)
+dim(X_training1)
+dim(x_testing1)
+dim(X_test1)
+class(training1)
+
+clf <- gbm(Y_training1 ~ ., data = X_training1, n.trees = 100, interaction.depth = 3, shrinkage = 1.0, verbose = FALSE)
+
+# Convert the data frames to matrices (if they are not already matrices)
+X_training1 <- as.matrix(X_training1)
+Y_training1 <- as.matrix(Y_training1)
+
+# Print the training score of the model
+training_score <- predict(clf, X_training1)
+accuracy <- sum(training_score == Y_training1)/nrow(Y_training1)
+cat("Score, Training: ", accuracy, "\n")
+
+
+# calculate training score
+training_score = clf.score(X_training1, y_true_training1)
 
 
 
-training1
-clf <- gbm(Y_training1 ~ ., data = training1, n.trees = 100, interaction.depth = 3, shrinkage = 1.0, verbose = FALSE)
-pred_train <- predict(clf, X_train, n.trees = 100)
-pred_test <- predict(clf, X_test, n.trees = 100)
+pred_train <- predict(clf, X_training1, n.trees = 100)
+pred_test <- predict(clf, X_testing1, n.trees = 100)
+pred_test <- predict(clf, X_test1, n.trees = 100)
+
+
+# Convert the data frames to matrices (if they are not already matrices)
+X_training <- as.matrix(X_training)
+Y_training <- as.matrix(Y_training)
+
+# Print the training score of the model
+training_score <- predict(clf, X_training)
+accuracy <- sum(training_score == Y_training)/nrow(Y_training)
+cat("Score, Training: ", accuracy, "\n")
 
 print(paste("Score, Training:", mean(pred_train == Y_train))) #accuracy score on training data
 print(paste("Score, Testing:", mean(pred_test == Y_test)))
+print(paste("Score, Testing:", mean(pred_test == Y_test)))
+
 )            
 
 ModeloGBM #mtry es el número de predictores.
