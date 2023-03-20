@@ -1,10 +1,10 @@
 #**************************************************************************************#
-#                                    TALLER 4 BDML                                     #
+#                                    TALLER 3 BDML                                     #
 #                        Uniandes: Sofia Charry Tobar                                  #
 #                                  Laura Manuela Rodríguez Morales                     #
 #                                  Nicol Valeria Rodríguez Rodríguez                   #
 #                                  Brayan Alexander Vargas Rojas                       #
-#                          Fuente: Twitter                                             #
+#                          Fuente: Properati                                           #
 #**************************************************************************************#
 
 # Limpiar el espacio
@@ -16,7 +16,7 @@ rm(list = ls(all.names = TRUE))
 
 #setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 #setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
-setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
+#setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
 setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
 
 
@@ -40,8 +40,7 @@ sapply(list.of.packages, require, character.only = TRUE)
 
 # Train
 train_ori <- read_csv("./data/train_final.csv")
-head(train_ori)
-id_train <- train_ori$id
+id_train <- train_ori$`train$id`
 train_ori <- train_ori[, -c(1,3)]
 train_ori$name <- as.factor(train_ori$name)
 
@@ -59,7 +58,6 @@ train_des <- train_ori %>%
     name == "Lopez" ~ 2,
     name == "Petro" ~ 3
   ))
-stargazer(train_des, type = "latex", title = "Estadísticas descriptivas", align = TRUE)
 
 
 set.seed(0000)
@@ -72,6 +70,7 @@ inTrain <- createDataPartition(
 
 training <- train_ori[ inTrain,] # Set de datos de entrenamiento
 testing  <- train_ori[-inTrain,] # Set de datos de evaluación
+<<<<<<< HEAD
 nrow(train_ori) # El conjunto de entrenamiento contiene el 70% de la base original
 
 # Exportamos Training
@@ -99,8 +98,7 @@ train_ori1 <- train_ori1[, -c(1,3)]
 train_ori1$name <- as.factor(train_ori1$name)
 
 # Test 
-test_ori <- read_csv("./data/test_final1.csv")
-
+test_ori1 <- read_csv("./data/test_final1.csv")
 
 set.seed(0000)
 
@@ -120,6 +118,9 @@ write.csv(training1,"./data/training1.csv", row.names = FALSE)
 write.csv(testing1,"./data/testing1.csv", row.names = FALSE)
 # Exportamos Test_ori
 write.csv(test_ori,"./data/test_ori.csv", row.names = FALSE)
+=======
+nrow(training) # El conjunto de entrenamiento contiene el 70% de la base original
+>>>>>>> 8b9773e2a589092fc81b3e0b682f0f3a98643482
 
 # Cross-validation
 ctrl <- trainControl(
@@ -187,7 +188,7 @@ percent90_t <- eig_val_testing$cumulative.variance.percent[row_index_t]
 # Print the result
 cat("The first value in cumulative.variance.percent >= 90 is", percent90_t, "at Dim", row_index_t, "\n")
 
-round_components_t <- as.data.frame(round(res_pca_testing$rotation[,1:1342],1)) 
+round_components_t <- as.data.frame(round(res_pca_testing$rotation[,1:957],1)) 
 
 codo_t<- fviz_eig(res_pca_testing, addlabels = TRUE, ylim = c(0, 3)) #solo llega a 10  no ayuda mucho    
 codo_t
@@ -203,7 +204,7 @@ dimensiones_t
 
 predict_testing_pca <- predict(res_pca_testing)
 predict_testing_pca <- as.data.frame(predict_testing_pca) 
-predict_testing_pca <- predict_testing_pca[, 1:1342]
+predict_testing_pca <- predict_testing_pca[, 1:957]
 
 # PARA TEST-------------
 test_pca<-test_ori[,-1]
@@ -228,21 +229,15 @@ round_components <- as.data.frame(round(res_test_pca$rotation[,1:859],1))
 
 predict_test_pca <- predict(res_test_pca)
 predict_test_pca <- as.data.frame(predict_test_pca) 
-Test_pca <- predict_test_pca[, 1:1342]
+Test_pca <- predict_test_pca[, 1:859]
 
 # ------------ conclusiones PCA ------------------------- #
 # Preparación de Y & X
 Y_training <- training$name
 Y_testing <- testing$name
 PCA_dta_training <- cbind(Y_training, as.data.frame(predict_train_pca))
-PCA_dta_testing <- cbind(Y_testing, as.data.frame(predict_test_pca))
+PCA_dta_testing <- cbind(Y_testing, as.data.frame(predict_testing_pca))
 Test_pca
-
-# Train
-write.csv(PCA_dta_training,"./data/PCA_dta_training1.csv", row.names = FALSE)
-
-# Test
-write.csv(PCA_dta_testing,"./data/PCA_dta_testing1.csv", row.names = FALSE)
 
 # ------------------------------------------------------------------------------------ #
 # 3. Modelos :)
@@ -314,8 +309,8 @@ ModeloLS_PCA1<-train(Y_training~.,
 )
 
 ## Predicción 1: Predicciones con testing
-pred_test1_lassoPCR1 <- predict(ModeloLS_PCA1, newdata = PCA_dta_testing) # Predicción
-metrics_lassoPCR1 <- confusionMatrix(pred_test1_lassoPCR1, PCA_dta_testing$Y_testing); metrics_lassoPCR1 # Cálculo del medidas de precisión
+pred_test1_lassoPCR1 <- predict(ModeloLS_PCA1, newdata = PCA_testing[,1:30]) # Predicción
+metrics_lassoPCR1 <- confusionMatrix(pred_test1_lassoPCR1, testing$name); metrics_lassoPCR1 # Cálculo del medidas de precisión
 
 cvlassoboth <- cv.gamlr(x=as.matrix(cbind(training,PCA_training)), y=Y_training, nfold=10)
 coef(cvlassoboth)
@@ -371,45 +366,25 @@ Kaggle_ModeloEN <- data.frame(id=test_ori$id, name=pred_test2_ModeloEN)
 write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
 # Accuracy:0.6
 
-#con pca 
-ModeloEN<-caret::train(Y_training~.,
-                       data=PCA_dta_training,
-                       method = 'glmnet', 
-                       trControl = ctrl,
-                       tuneGrid = expand.grid(alpha = seq(0,1,by = 0.001), #Lasso
-                                              lambda = seq(0.001,1,by = 0.001)),
-                       preProcess = c("center", "scale"), 
-                       metric = "Accuracy"
-) 
-
-summary(ModeloEN) # Resumen del modelo
-ggplot(varImp(ModeloEN)) # Gráfico de importancia de las variables
-ModeloEN$bestTune
-
-## Predicción 1: Predicciones con hog_testing
-pred_test1_ModeloEN <- predict(ModeloEN, newdata = PCA_dta_testing) # Predicción
-metrics_ModeloEN <- confusionMatrix(pred_test1_ModeloEN, PCA_dta_testing$Y_testing); metrics_ModeloEN # Cálculo del medidas de precisión
-
-## Predicción 2: Predicciones con test_hogares
-pred_test2_ModeloEN <- predict(ModeloEN, newdata = test_ori)
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloEN <- data.frame(id=test_ori$id, name=pred_test2_ModeloEN)
-write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
-# Accuracy:0.6
-
 ### 3.5 GBM -------------------------------------------------------------------------------------------
 
-p_load(gbm)
-grid_gbm<-expand.grid(n.trees=c(300,700),interaction.depth=c(1:3),shrinkage=seq(0.1,0.5,by = 0.1),n.minobsinnode
-                      =c(10,30))
+library(gbm)
 
-ModeloGBM <- train(name~.,
-                   data = training, 
-                   method = "gbm", 
-                   trControl = ctrl,
-                   tuneGrid=grid_gbm,
-                   metric = "Accuracy"
+Y_training1 <- training1$name
+Y_testing1 <- testing1$name
+X_training1 <- training1$name
+x_testing1 <- subset(training1, select = -name)
+Y_training1 <- subset(training1, select = -name)
+
+
+
+training1
+clf <- gbm(Y_training1 ~ ., data = training1, n.trees = 100, interaction.depth = 3, shrinkage = 1.0, verbose = FALSE)
+pred_train <- predict(clf, X_train, n.trees = 100)
+pred_test <- predict(clf, X_test, n.trees = 100)
+
+print(paste("Score, Training:", mean(pred_train == Y_train))) #accuracy score on training data
+print(paste("Score, Testing:", mean(pred_test == Y_test)))
 )            
 
 ModeloGBM #mtry es el número de predictores.
@@ -430,84 +405,6 @@ pred_test2_ModeloGBM <- predict(ModeloGBM, newdata = test_ori)
 Kaggle_ModeloGBM <- data.frame(id=test_ori$id, name=pred_test2_ModeloGBM)
 write.csv(Kaggle_ModeloGBM,"./stores/Kaggle_ModeloGBM.csv", row.names = FALSE)
 # Accuracy: 
-
-### 3.5 Superlearner -------------------------------------------------------------------------------------------
-p_load("SuperLearner")
-ySL<-training$price
-XSL<- training  %>% select(surface_covered2,bedrooms,bathrooms2,Chapinero,property_type,terraza,social,parqueadero,
-                        distancia_parque,distancia_gym,distancia_transmi,distancia_cai,distancia_cc,distancia_bar,distancia_SM,
-                        distancia_colegios,distancia_universidades,distancia_hospitales)
-
-sl.lib <- c("SL.glmnet", "SL.lm", "SL.ridge", "SL.gbm" ) #lista de los algoritmos a correr
-
-# Fit using the SuperLearner package,
-ModeloSL <- SuperLearner(Y = ySL,  X= data.frame(XSL),
-                     method = "method.NNLS", # combinación convexa
-                     SL.library = sl.lib)
-
-ModeloSL
-
-## Predicción 1: Predicciones con testing
-testing <- testing  %>%  mutate(yhat_Sup=predict(ModeloSL, newdata = data.frame(testing), onlySL = T)$pred)
-pred_test1_ModeloSL <- testing$yhat_Sup
-eva_ModeloSL <- data.frame(obs=testing$price, pred=pred_test1_ModeloSL) # Data frame con observados y predicciones
-metrics_ModeloSL <- metrics(eva_ModeloSL, obs, pred); metrics_ModeloSL # Cálculo del medidas de precisión
-
-## Predicción 2: Predicciones con test_bog
-test_bog <- test_bog  %>%  mutate(yhat_Sup=predict(ModeloSL, newdata = data.frame(test_bog), onlySL = T)$pred)
-pred_test2_ModeloSL <- test_bog$yhat_Sup
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloSL <- data.frame(property_id=test_bog$property_id, price=pred_test2_ModeloSL)
-write.csv(Kaggle_ModeloSL,"./stores/Kaggle_ModeloSL.csv", row.names = FALSE)
-# MAE: 279848874.92923
-
-
-p_load("SuperLearner")
-sl.lib <- c("SL.glmnet", "SL.lm", "Sl.ridge") #lista de los algoritmos a correr
-
-# Fit using the SuperLearner package,
-
-Super1 <- SuperLearner(Y = ySL,  X= data.frame(XSL),
-                     method = "method.NNLS", # combinación convexa
-                     SL.library = sl.lib)
-
-Super1
-
-## NET 
-# Customize the defaults for random forest.
-custon_glmnet = create.Learner("SL.glmnet", tune = list(alpha = seq(0, 1, length.out=5)))
-
-# Look at the object.
-custon_glmnet$names
-
-
-sl.net <- c("SL.glmnet_1", "SL.glmnet_2", "SL.glmnet_3", "SL.glmnet_4", "SL.glmnet_5") #lista de los algoritmos a correr
-
-# Fit using the SuperLearner package,
-
-Super2 <- SuperLearner(Y = ySL,  X= data.frame(XSL),
-                       method = "method.NNLS", # combinación convexa
-                       SL.library = sl.net)
-
-Super2
-
-## Predicción 1: Predicciones con testing
-testing <- testing  %>%  mutate(yhat_Sup=predict(Super2, newdata = data.frame(testing), onlySL = T)$pred)
-pred_test1_Super2 <- testing$yhat_Sup
-eva_ModeloSuper2 <- data.frame(obs=testing$price, pred=pred_test1_ModeloSuper2) # Data frame con observados y predicciones
-metrics_ModeloSuper2 <- metrics(eva_ModeloSuper2, obs, pred); metrics_ModeloSuper2 # Cálculo del medidas de precisión
-
-## Predicción 2: Predicciones con test_ori
-test_bog <- test_bog  %>%  mutate(yhat_Sup=predict(ModeloSuper2, newdata = data.frame(test_bog), onlySL = T)$pred)
-pred_test2_ModeloSuper2 <- test_bog$yhat_Sup
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloSuper2 <- data.frame(property_id=test_bog$property_id, price=pred_test2_ModeloSuper2)
-write.csv(Kaggle_ModeloSuper2,"./stores/Kaggle_ModeloSuper2.csv", row.names = FALSE)
-
-### 3.6 PCA -------------------------------------------------------------------------------------------
-
 
 ### 3.7 Red neuronal -------------------------------------------------------------------------------------------
 install.packages('kerasR')
@@ -576,80 +473,3 @@ y_hat_test <- model  %>% predict(X_test) %>% k_argmax()
 # Exportar para prueba en Kaggle
 Kaggle_ModeloNN <- data.frame(id=test_ori$id, name=as.numeric(y_hat_test))
 write.csv(Kaggle_ModeloNN,"./stores/Kaggle_ModeloNN.csv", row.names = FALSE)
-
-### 3.8 Red neuronal con PCA---------------------------------------------------------------------------------------
-
-# Desglosamos las cuentas en 3 variables binarias
-
-p_load(keras)
-
-Y_training <- to_categorical(PCA_dta_training$Y_training, 3)
-Y_validation <- to_categorical(PCA_dta_testing$Y_testing, 3)
-
-y_train <- to_categorical(y_train, 10)
-y_test <- to_categorical(y_test, 10)
-head(y_train)
-
-
-
-
-
-# Primero, apartamos la misma porción de los datos del train data usados anteriormente para validación
-
-X_PCA_train <- PCA_dta_training[, -which(names(PCA_dta_training) == "Y_training")]
-Y_PCA_train <- PCA_dta_training$Y_training
-set.seed(0000)
-split <- createDataPartition(Y_PCA_train, p = 0.7, list = FALSE)
-X_training1 <- X_PCA_train[split, ]
-X_validation <- X_PCA_train[-split, ]
-Y_training1 <- Y_PCA_train[split]
-Y_validation <- Y_PCA_train[-split]
-
-dim(X_validation)
-
-write.csv(X_training1,"./data/PCA_dta_training.csv", row.names = FALSE)
-write.csv(X_validation,"./data/PCA_dta_training.csv", row.names = FALSE)
-write.csv(Y_training1,"./data/PCA_dta_training.csv", row.names = FALSE)
-write.csv(Y_validation,"./data/PCA_dta_training.csv", row.names = FALSE)
-
-
- 
-
-## Predicción 1: Predicciones con testing
-# Variable Y
-Y_testing <- testing$name
-Y_testing <- to_categorical(Y_testing)
-# Matriz X
-tf_testing <- testing
-X_testing <- as.matrix(tf_testing)
-
-model %>% evaluate(X_testing, Y_testing)
-y_hat_testing <- model  %>% predict(X_testing) %>% k_argmax()
-
-confusionMatrix(data = factor(as.numeric(y_hat_testing), levels = 1:5), 
-                reference = factor(testing$name, levels = 1:5))
-
-
-
-
-
-library(caret)
-library(nnet)
-
-# Read in the preprocessed data
-tweets_train <- read.csv("./data/PCA_dta_training.csv")
-
-# Set up the training and testing data sets
-trainIndex <- createDataPartition(tweets$name, p = 0.8, list = FALSE)
-train <- tweets[trainIndex, ]
-test <- tweets[-trainIndex, ]
-
-# Train a neural network using the training data
-model <- nnet(Y_training ~ ., data = PCA_dta_training, size = 5)
-head(PCA_dta_training, n=10, ncol())
-
-# Use the trained model to predict the account for the test data
-predictions <- predict(model, newdata = test)
-
-# Calculate the accuracy of the predictions
-confusionMatrix(predictions, test$account)
