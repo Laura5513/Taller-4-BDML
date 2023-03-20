@@ -14,17 +14,17 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-#setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
+setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
 #setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 #setwd('C:/Users/sofia/OneDrive/Documentos/GitHub/Taller-4-BDML')
-setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
+#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
 
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "arsenal", "fastDummies", 
                      "caret", "glmnet", "MLmetrics", "skimr", "plyr", "stargazer", 
                      "ggplot2", "plotly", "corrplot", "Hmisc", "sf", "tmaptools", 
                      "osmdata", "leaflet", "rgeos", "yardstick", "SuperLearner", 
-                     "adabag")
+                     "adabag", "nnet")
 
 new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -121,7 +121,7 @@ nrow(training) # El conjunto de entrenamiento contiene el 70% de la base origina
 # Cross-validation
 ctrl <- trainControl(
   method = "cv", 
-  number = 6) # número de folds
+  number = 10) # número de folds
 
 # ------------------------------------------------------------------------------------ #
 #  PCA
@@ -241,7 +241,7 @@ Test_pca
 
 ### 3.1 Logit -----------------------------------------------------------------------------------------
 
-ModeloLogit <- glm(name~., family="binomial", data=training)
+ModeloLogit <- multinom(name ~., data = training)
 
 ModeloLogitPCA <- glm(Y_training~., family="binomial", data=PCA_dta_training)
 
