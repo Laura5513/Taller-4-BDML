@@ -34,7 +34,7 @@ sapply(list.of.packages, require, character.only = TRUE)
 # ------------------------------------------------------------------------------------ #
 
 # Predecir qué político posteó cada tweet en el test set (Claudia Lopez, Gustavo
-#Petro o Alvaro Uribe)
+# Petro o Alvaro Uribe)
 
 # ------------------------------------------------------------------------------------ #
 # 2. Data
