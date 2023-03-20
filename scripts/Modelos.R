@@ -86,6 +86,46 @@ ctrl <- trainControl(
   method = "cv", 
   number = 6) # número de folds
 
+#------------------------------------------------------------------------------------- #
+#          CON LAS BASES PROCESADAS CONJUNTAMENTE
+#------------------------------------------------------------------------------------- #
+
+
+# Train
+train_ori1 <- read_csv("./data/train_final1.csv")
+head(train_ori1)
+id_train <- train_ori1$id
+train_ori1 <- train_ori1[, -c(1,3)]
+train_ori1$name <- as.factor(train_ori1$name)
+
+# Test 
+test_ori <- read_csv("./data/test_final1.csv")
+
+
+set.seed(0000)
+
+# Partición de la base de datos train, con el objetivo de evaluar el performance de los modelos.
+inTrain <- createDataPartition(
+  y = train_ori1$name,## Nuestra  
+  p = .7, ## Usamos 70%  de los datos en el conjunto de entrenamiento 
+  list = FALSE)
+
+training1 <- train_ori1[ inTrain,] # Set de datos de entrenamiento
+testing1  <- train_ori1[-inTrain,] # Set de datos de evaluación
+nrow(train_ori1) # El conjunto de entrenamiento contiene el 70% de la base original
+
+# Exportamos training1
+write.csv(training1,"./data/training1.csv", row.names = FALSE)
+# Exportamos testing1 (validación)
+write.csv(testing1,"./data/testing1.csv", row.names = FALSE)
+# Exportamos Test_ori
+write.csv(test_ori,"./data/test_ori.csv", row.names = FALSE)
+
+# Cross-validation
+ctrl <- trainControl(
+  method = "cv", 
+  number = 6) # número de folds
+
 # ------------------------------------------------------------------------------------ #
 #  PCA
 # ------------------------------------------------------------------------------------ #
