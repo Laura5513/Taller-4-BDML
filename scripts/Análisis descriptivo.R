@@ -83,8 +83,124 @@ p_load(stopwords)
 lista_palabras1 <- stopwords(language = "es", source = "snowball")
 lista_palabras2 <- stopwords(language = "es", source = "nltk")
 lista_palabras <- union(lista_palabras1, lista_palabras2)
+ 
+####
 
 tweets_train <- removeWords(tweets_train, lista_palabras)
+
+tweets_train <- removeNumbers(tweets_train)
+tweets_train <- removePunctuation(tweets_train)
+tweets_train <- tolower(tweets_train)
+tweets_train <- stripWhitespace(tweets_train)
+
+tweets <- as.data.frame(tweets_train) %>% unnest_tokens( "word", tweets_train)
+
+dim(tweets) 
+
+tweets  %>% 
+  count(word, sort = TRUE)   %>% 
+  head()
+
+head(stopwords('spanish'))
+
+tweets <- tweets %>% 
+  anti_join(tibble(word =stopwords("spanish")))
+
+dim(tweets)
+
+# Definimos stop words adicionales 
+custom_stopwords <- c("hoy", "solo", "gran", "ayer", "hacía", "san", "ahora", "debe")
+
+# Eliminamos los nuevos stop words
+tweets <- anti_join(tweets, data.frame(word = custom_stopwords))
+
+wordcloud(tweets$word, min.freq = 90, 
+          colors= c(rgb(72/255, 191/255, 169/255),rgb(249/255, 220/255, 92/255), rgb(229/255, 249/255, 147/255))) 
+
+tweets$radical <- stemDocument( tweets$word, language="spanish")
+tweets %>% head()
+
+# Generar bigramas a partir del texto de las críticas
+bigrams <- as.data.frame(tweets_train) %>%
+  unnest_tokens(bigram, tweets_train, token = "ngrams", n = 2)
+stop_words <- data.frame(word1 = stopwords("es"), 
+                         word2 = stopwords("es"))
+
+
+# Eliminar los bigramas que contengan palabras de parada
+bigrams <- bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  anti_join(stop_words, by = "word1") %>%
+  anti_join(stop_words, by = "word2") %>%
+  unite(bigram, word1, word2, sep = " ")
+
+# Calcular la frecuencia de los bigramas
+bigram_freq <- bigrams %>%
+  count(bigram, sort = TRUE)
+
+# Visualizar los bigramas más frecuentes
+ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
+  geom_bar(stat = "identity", fill = "#4e79a7") +
+  ggtitle("Bigramas más frecuentes") +
+  ylab("Bigramas") +
+  xlab("Frecuencia")
+
+# Cargar bibliotecas necesarias
+library(tm)
+library(dplyr)
+
+# Convertir la lista de tweets a un objeto Corpus
+corpus <- Corpus(VectorSource(tweets))
+
+# Preprocesar el texto
+corpus <- corpus %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(removeWords, stopwords("english")) %>%
+  tm_map(stripWhitespace) %>%
+  tm_map(tolower)
+
+# Extraer todas las palabras del Corpus
+palabras <- unlist(strsplit(as.character(corpus), "\\s+"))
+
+# Contar el número de veces que aparece cada palabra
+tabla_palabras <- table(palabras)
+
+# Ordenar la tabla de frecuencia de mayor a menor
+tabla_palabras_ordenada <- sort(tabla_palabras, decreasing = TRUE)
+
+# Convertir la tabla en un data frame para graficar
+df_palabras <- data.frame(palabra = names(tabla_palabras_ordenada),
+                          frecuencia = as.numeric(tabla_palabras_ordenada))
+
+# Graficar el número de veces que aparece cada palabra
+library(ggplot2)
+ggplot(df_palabras[1:20, ], aes(x = palabra, y = frecuencia)) +
+  geom_bar(stat = "identity") +
+  xlab("Palabras") +
+  ylab("Frecuencia") +
+  ggtitle("Frecuencia de palabras en los tweets") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Crear la tabla de frecuencia ordenada de mayor a menor
+tabla_palabras <- table(tolower(palabras))
+tabla_palabras_ordenada <- sort(tabla_palabras, decreasing = TRUE)
+
+# Convertir la tabla en un data frame para graficar
+df_palabras <- data.frame(palabra = names(tabla_palabras_ordenada),
+                          frecuencia = as.numeric(tabla_palabras_ordenada))
+
+# Graficar el número de veces que aparece cada palabra
+library(ggplot2)
+ggplot(df_palabras[1:20, ], aes(x = palabra, y = frecuencia, fill = "blue")) +
+  geom_bar(stat = "identity") +
+  xlab("Palabras") +
+  ylab("Frecuencia") +
+  ggtitle("Frecuencia de palabras en los tweets") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+
 
 # Todo minúscula
 tweets_train <- tm_map(tweets_train,content_transformer(tolower)) 
@@ -191,6 +307,46 @@ ggplot(bigram_freq[1:10, ], aes(y = reorder(bigram, -n), x = n)) +
   ggtitle("Bigramas más frecuentes") +
   ylab("Bigramas") +
   xlab("Frecuencia")
+
+# Cargar la librería
+p_load(udpipe)
+
+# Cargar modelo pre-entrenado para español
+model <- udpipe_download_model(language = "spanish")
+
+model <- udpipe_load_model(model$file_model)
+
+# Separar bigramas 
+bigrams_sep <- bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ") 
+
+# Anotar las partes del discurso en las reseñas
+reviews_annotated1 <- udpipe_annotate(model, bigrams_sep$word1)
+
+
+# Convertir los resultados a formato tibble
+reviews_tibble1 <- as.data.frame(reviews_annotated1) %>%
+  select(token, upos)
+
+# Filtrar solo los adjetivos
+adjetivos1 <- reviews_tibble1 %>%
+  filter(upos == "ADJ") %>%
+  select(token)
+
+p_load(syuzhet)
+
+# Asociar los sentiemintos (esto puede ser demorado)
+sentimientos_df <- get_nrc_sentiment(adjetivos1$token, lang="spanish")
+
+sentimientos_df$adjetivos  = adjetivos1$token
+
+head(sentimientos_df, 10)
+
+# Seleccionar adjetivos malos 
+adjetivos_buenos <-sentimientos_df[sentimientos_df$positive==1, "adjetivos"]
+adjetivos_malos  <-sentimientos_df[sentimientos_df$negative==0, "adjetivos"]
+
+wordcloud(adjetivos_malos, min.freq = 10000, colors = c(rgb(72/255, 191/255, 169/255), rgb(249/255, 220/255, 92/255), rgb(229/255, 249/255, 147/255)), width = 800, height = 800)
 
 # Creamos la Document Term Matrix (DTM)
 

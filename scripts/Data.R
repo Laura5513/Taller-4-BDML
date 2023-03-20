@@ -14,9 +14,9 @@ rm(list = ls(all.names = TRUE))
 # Cargar librerias.
 # ------------------------------------------------------------------------------------ #
 
-setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
+#setwd("C:/Users/lmrod/OneDrive/Documentos/GitHub/Taller-4-BDML")
 #setwd("C:/Users/nicol/Documents/GitHub/Repositorios/Taller-4-BDML")
-#setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
+setwd("/Users/bray/Desktop/Big Data/Talleres/Taller-4-BDML")
 
 
 list.of.packages = c("pacman", "readr","tidyverse", "dplyr", "tidyr", "fastDummies",
@@ -152,6 +152,11 @@ dim(tweets_test)
 # Eliminamos términos que son poco frecuentes en todo el corpus
 dtm_idf_test <- removeSparseTerms(dtm_idf_test, sparse = 0.999)
 inspect(dtm_idf_test[100:103,])
+
+##############################################################################
+
+wordcloud(tweets_train$word, min.freq = 100, 
+          colors= c(rgb(72/255, 191/255, 169/255),rgb(249/255, 220/255, 92/255), rgb(229/255, 249/255, 147/255)))
 
 # 2.2 Exportar bases de datos finales --------------------------------------------
 
