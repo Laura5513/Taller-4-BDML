@@ -70,7 +70,6 @@ inTrain <- createDataPartition(
 
 training <- train_ori[ inTrain,] # Set de datos de entrenamiento
 testing  <- train_ori[-inTrain,] # Set de datos de evaluación
-<<<<<<< HEAD
 nrow(train_ori) # El conjunto de entrenamiento contiene el 70% de la base original
 
 # Exportamos Training
@@ -118,9 +117,7 @@ write.csv(training1,"./data/training1.csv", row.names = FALSE)
 write.csv(testing1,"./data/testing1.csv", row.names = FALSE)
 # Exportamos Test_ori
 write.csv(test_ori,"./data/test_ori.csv", row.names = FALSE)
-=======
 nrow(training) # El conjunto de entrenamiento contiene el 70% de la base original
->>>>>>> 8b9773e2a589092fc81b3e0b682f0f3a98643482
 
 # Cross-validation
 ctrl <- trainControl(
@@ -260,15 +257,12 @@ metrics_ModeloLogit <- confusionMatrix(pred_test1_ModeloLogit, testing$name); me
 pred_test1_ModeloLogitPCA <- predict(ModeloLogitPCA, newdata = ) # Predicción
 metrics_ModeloLogitPCA <- confusionMatrix(pred_test1_ModeloLogitPCA, testing$name); metrics_ModeloLogitPCA # Cálculo del medidas de precisión
 
-
 ## Predicción 2: Predicciones con test
-pred_test1_ModeloLogit <- predict(ModeloLogit, newdata = test_ori)
+pred_test2_ModeloLogit <- predict(ModeloLogit, newdata = test_ori)
 
 # Exportar para prueba en Kaggle
-Kaggle_Modelolasso <- data.frame(id=test_ori$id, name=pred_test2_Modelolasso)
-write.csv(Kaggle_Modelolasso,"./stores/Kaggle_ModeloLS.csv", row.names = FALSE)
-
-
+Kaggle_ModeloLogit <- data.frame(id=test_ori$id, name=pred_test2_ModeloLogit)
+write.csv(Kaggle_ModeloLogit,"./stores/Kaggle_ModeloLG.csv", row.names = FALSE)
 
 ### 3.2 Lasso -----------------------------------------------------------------------------------------
 
@@ -337,7 +331,7 @@ pred_test2_ModeloRidge <- predict(ModeloRidge, newdata = test_ori)
 # Exportar para prueba en Kaggle
 Kaggle_ModeloRidge <- data.frame(id=test_ori$id, name=pred_test2_ModeloRidge)
 write.csv(Kaggle_ModeloRidge,"./stores/Kaggle_ModeloRidge.csv", row.names = FALSE)
-# Accuracy: 0.77333
+# Accuracy: 0.34333
 
 ### 3.4 Elastic net -----------------------------------------------------------------------------------
 ModeloEN<-caret::train(name~.,
