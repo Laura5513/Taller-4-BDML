@@ -36,9 +36,15 @@ Por lo tanto, la carpeta de "scripts" contiene:
 
 # Graphs
 
-Todas las gráficas se pueden encontrar en la carpeta "views".
+Todas las gráficas se pueden encontrar en la carpeta "views". En este se encuentran las gráficas de estadísticas descriptivas y algúnos gráficos para la definición en PCA. 
 
 # Data dictionary
 
+## Variable explicada Y
+Corresponde a una variable de clasificación donde puede tomar el valor de Petro, Uribe, Lopez.
+
+## Variables dependientes X 
+
+*nota* = Algunos modelos se entrenaron bajo PCA, en este caso las variables explicativas cambian a componentes. 
 
  
