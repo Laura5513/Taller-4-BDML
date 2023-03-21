@@ -239,30 +239,6 @@ Test_pca
 # 3. Modelos :)
 # ------------------------------------------------------------------------------------ #
 
-### 3.1 Logit -----------------------------------------------------------------------------------------
-
-ModeloLogit <- multinom(name ~., data = training)
-
-ModeloLogitPCA <- glm(Y_training~., family="binomial", data=PCA_dta_training)
-
-head(PCA_dta_training)
-
-summary(ModeloLogit) # Resumen del modelo
-
-## Predicción 1: Predicciones con testing
-pred_test1_ModeloLogit <- predict(ModeloLogit, newdata = ) # Predicción
-metrics_ModeloLogit <- confusionMatrix(pred_test1_ModeloLogit, testing$name); metrics_ModeloLogit # Cálculo del medidas de precisión
-
-pred_test1_ModeloLogitPCA <- predict(ModeloLogitPCA, newdata = ) # Predicción
-metrics_ModeloLogitPCA <- confusionMatrix(pred_test1_ModeloLogitPCA, testing$name); metrics_ModeloLogitPCA # Cálculo del medidas de precisión
-
-## Predicción 2: Predicciones con test
-pred_test2_ModeloLogit <- predict(ModeloLogit, newdata = test_ori)
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloLogit <- data.frame(id=test_ori$id, name=pred_test2_ModeloLogit)
-write.csv(Kaggle_ModeloLogit,"./stores/Kaggle_ModeloLG.csv", row.names = FALSE)
-
 ### 3.2 Lasso -----------------------------------------------------------------------------------------
 
 ModeloLS<-train(name~.,
@@ -276,8 +252,18 @@ ModeloLS<-train(name~.,
 
 summary(ModeloLS) # Resumen del modelo
 coef_lasso<-coef(ModeloLS$finalModel, ModeloLS$bestTune$lambda)
-coef_lasso
-ggplot(varImp(ModeloLS)) # Gráfico de importancia de las variables
+info <-varImp(ModeloLS)
+info <- as.data.frame(info$importance)
+rownames <- rownames(info)
+info <- cbind(rownames, info)
+rownames(info) <- NULL
+infoL <- info[, 1:2]
+infoP <- info[, c(1, 3)]
+infoU <- info[, c(1, 4)]
+infoL_sort1 <- infoL[order(infoL$Lopez, decreasing = T), ]             # Order data based on one column
+infoP_sort1 <- infoP[order(infoP$Petro, decreasing = T), ]             # Order data based on one column
+infoU_sort1 <- infoU[order(infoU$Uribe, decreasing = T), ]             # Order data based on one column
+stargazer(cbind(infoL_sort1, infoP_sort1, infoU_sort1)[1:40,], summary = FALSE)
 
 ## Predicción 1: Predicciones con testing
 pred_test1_Modelolasso <- predict(ModeloLS, newdata = testing) # Predicción
