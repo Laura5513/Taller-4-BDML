@@ -244,30 +244,6 @@ Test_pca
 
 ### 3.1 Logit -----------------------------------------------------------------------------------------
 
-ModeloLogit <- glm(name~., family="binomial", data=training)
-
-ModeloLogitPCA <- glm(Y_training~., family="binomial", data=PCA_dta_training)
-
-head(PCA_dta_training)
-
-summary(ModeloLogit) # Resumen del modelo
-
-## Predicción 1: Predicciones con testing
-pred_test1_ModeloLogit <- predict(ModeloLogit, newdata = ) # Predicción
-metrics_ModeloLogit <- confusionMatrix(pred_test1_ModeloLogit, testing$name); metrics_ModeloLogit # Cálculo del medidas de precisión
-
-pred_test1_ModeloLogitPCA <- predict(ModeloLogitPCA, newdata = ) # Predicción
-metrics_ModeloLogitPCA <- confusionMatrix(pred_test1_ModeloLogitPCA, testing$name); metrics_ModeloLogitPCA # Cálculo del medidas de precisión
-
-
-## Predicción 2: Predicciones con test
-pred_test1_ModeloLogit <- predict(ModeloLogit, newdata = test_ori)
-
-# Exportar para prueba en Kaggle
-Kaggle_Modelolasso <- data.frame(id=test_ori$id, name=pred_test2_Modelolasso)
-write.csv(Kaggle_Modelolasso,"./stores/Kaggle_ModeloLS.csv", row.names = FALSE)
-
-
 
 ### 3.2 Lasso -----------------------------------------------------------------------------------------
 
@@ -367,141 +343,11 @@ write.csv(Kaggle_ModeloEN,"./stores/Kaggle_ModeloEN.csv", row.names = FALSE)
 
 ### 3.5 GBM -------------------------------------------------------------------------------------------
 
-library(gbm)
+# Se realizó el procedimiento en Python, por favor referirse al archivo "GB y RF modelos.ipynb"
+# Accuracy: 0,74 
 
-Y_training1 <- training1$name
-Y_testing1 <- testing1$name
-X_training1 <- subset(training1, select = -name) # 70% de entrenamiento de la base train_final1
-x_testing1 <- subset(testing1, select = -name) # 30% de validación de la base train_final1
-X_test1 <- test_ori # test
+### 3.6 Random forest -------------------------------------------------------------------------------------------
 
-length(Y_training1)
-length(Y_testing1)
-dim(X_training1)
-dim(x_testing1)
-dim(X_test1)
-class(training1)
-
-clf <- gbm(Y_training1 ~ ., data = X_training1, n.trees = 100, interaction.depth = 3, shrinkage = 1.0, verbose = FALSE)
-
-# Convert the data frames to matrices (if they are not already matrices)
-X_training1 <- as.matrix(X_training1)
-Y_training1 <- as.matrix(Y_training1)
-
-# Print the training score of the model
-training_score <- predict(clf, X_training1)
-accuracy <- sum(training_score == Y_training1)/nrow(Y_training1)
-cat("Score, Training: ", accuracy, "\n")
-
-
-# calculate training score
-training_score = clf.score(X_training1, y_true_training1)
-
-
-
-pred_train <- predict(clf, X_training1, n.trees = 100)
-pred_test <- predict(clf, X_testing1, n.trees = 100)
-pred_test <- predict(clf, X_test1, n.trees = 100)
-
-
-# Convert the data frames to matrices (if they are not already matrices)
-X_training <- as.matrix(X_training)
-Y_training <- as.matrix(Y_training)
-
-# Print the training score of the model
-training_score <- predict(clf, X_training)
-accuracy <- sum(training_score == Y_training)/nrow(Y_training)
-cat("Score, Training: ", accuracy, "\n")
-
-print(paste("Score, Training:", mean(pred_train == Y_train))) #accuracy score on training data
-print(paste("Score, Testing:", mean(pred_test == Y_test)))
-print(paste("Score, Testing:", mean(pred_test == Y_test)))
-
-)            
-
-ModeloGBM #mtry es el número de predictores.
-plot(ModeloGBM)
-ModeloGBM$finalModel
-
-### Variable Importance
-plot(varImp(ModeloGBM,scale=TRUE))
-
-## Predicción 1: Predicciones con testing
-pred_test1_ModeloGBM <- predict(ModeloGBM, newdata = testing, type="raw")
-metrics_ModeloGBM <- confusionMatrix(pred_test1_ModeloGBM, testing$name); metrics_ModeloGBM # Cálculo del medidas de precisión
-
-## Predicción 2: Predicciones con test_ori
-pred_test2_ModeloGBM <- predict(ModeloGBM, newdata = test_ori)
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloGBM <- data.frame(id=test_ori$id, name=pred_test2_ModeloGBM)
-write.csv(Kaggle_ModeloGBM,"./stores/Kaggle_ModeloGBM.csv", row.names = FALSE)
-# Accuracy: 
-
-### 3.7 Red neuronal -------------------------------------------------------------------------------------------
-install.packages('kerasR')
-library(keras)
-library(kerasR)
-
-# Variable Y
-Y_training <- training$name
-Y_training <- to_categorical(Y_training)
-head(Y_training)
-dim(Y_training)
-class(Y_training)
-# Matriz X
-tf_training <- training[, -1]
-X_training <- as.matrix(tf_training)
-class(X_training)
-set.seed(666)
-n_h = nrow(X_training)/(2*(ncol(X_training) + 5))
-model <- keras_model_sequential() 
-# Premio para el que me diga la formula de la función de activación softmax
-# y me diga que es
-model %>% 
-  layer_dense(units = 10, activation = 'relu', input_shape = ncol(X_training)) %>% 
-  layer_dropout(rate = 0.5) %>%
-  layer_dense(units = 3, activation = 'softmax')
-summary(model)
-
-model %>% compile(
-  optimizer = 'adam',
-  loss = 'categorical_crossentropy',
-  metrics = c('CategoricalAccuracy')
-)
-
-history <- model %>% 
-  fit(
-    X_training, Y_training, 
-    epochs = 5, 
-    # Truco pa la vida. El batch_size debe ser un número del estilo 2^x por motivos
-    # de eficiencia computacional
-    batch_size = 2^8,
-    # Toca set pequeño de validación porque estamos jodidos de datos
-    validation_split = 0.2
-  )
-
-## Predicción 1: Predicciones con testing
-# Variable Y
-Y_testing <- testing$name
-Y_testing <- to_categorical(Y_testing)
-# Matriz X
-tf_testing <- testing
-X_testing <- as.matrix(tf_testing)
-
-model %>% evaluate(X_testing, Y_testing)
-y_hat_testing <- model  %>% predict(X_testing) %>% k_argmax()
-
-confusionMatrix(data = factor(as.numeric(y_hat_testing), levels = 1:5), 
-                reference = factor(testing$name, levels = 1:5))
-
-## Predicción 1: Predicciones con test_ori
-# Variable Y
-tf_test <- test_ori[, -1]
-X_test <- as.matrix(tf_test)
-
-y_hat_test <- model  %>% predict(X_test) %>% k_argmax()
-
-# Exportar para prueba en Kaggle
-Kaggle_ModeloNN <- data.frame(id=test_ori$id, name=as.numeric(y_hat_test))
-write.csv(Kaggle_ModeloNN,"./stores/Kaggle_ModeloNN.csv", row.names = FALSE)
+# Se realizó el procedimiento en Python, por favor referirse al archivo "GB y RF modelos.ipynb"
+# Accuracy: 0,7266 con 100 árboles
+# Accuracy: 0,74 con 300 árboles
